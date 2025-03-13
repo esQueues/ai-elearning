@@ -4,7 +4,7 @@ import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const AddModule = () => {
-    const { id } = useParams(); // Course ID
+    const { id } = useParams();
     const navigate = useNavigate();
     const [title, setTitle] = useState("");
     const [error, setError] = useState("");
@@ -14,7 +14,7 @@ const AddModule = () => {
         if (!e.target.value.trim()) {
             setError("Module title cannot be empty.");
         } else {
-            setError(""); // Clear error if title is valid
+            setError("");
         }
     };
 

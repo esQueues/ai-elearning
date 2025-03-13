@@ -47,19 +47,16 @@ const AddQuiz = () => {
     const handleSubmit = async () => {
         setError(null);
 
-        // Validation: Check if title is empty
         if (!title.trim()) {
             setError("Quiz title cannot be empty.");
             return;
         }
 
-        // Validation: Check if there are questions
         if (questions.length === 0) {
             setError("Quiz must have at least one question.");
             return;
         }
 
-        // Validation: Check each question
         for (let i = 0; i < questions.length; i++) {
             if (!questions[i].questionText.trim()) {
                 setError(`Question ${i + 1} cannot be empty.`);

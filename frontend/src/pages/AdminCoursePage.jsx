@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Button, Table, Spinner, Container } from 'react-bootstrap';
-import { Link } from 'react-router-dom'; // Import Link from react-router-dom
+import { Link } from 'react-router-dom';
 
 const AdminCoursePage = () => {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Fetch all courses (public and private) from the backend
     const fetchCourses = async () => {
         try {
             const response = await axios.get('/api/courses/all', { withCredentials: true });
@@ -22,7 +21,7 @@ const AdminCoursePage = () => {
     const approveCourse = async (id) => {
         try {
             await axios.patch(`/api/courses/${id}/approve`, {}, { withCredentials: true });
-            fetchCourses(); // Refresh course list
+            fetchCourses();
         } catch (error) {
             console.error("Error approving course:", error);
         }
@@ -31,7 +30,7 @@ const AdminCoursePage = () => {
     const disallowCourse = async (id) => {
         try {
             await axios.patch(`/api/courses/${id}/disallow`, {}, { withCredentials: true });
-            fetchCourses(); // Refresh course list
+            fetchCourses();
         } catch (error) {
             console.error("Error making course private:", error);
         }

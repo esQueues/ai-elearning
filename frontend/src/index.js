@@ -6,7 +6,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
-// Error boundary component
 class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
@@ -35,17 +34,14 @@ class ErrorBoundary extends React.Component {
     }
 }
 
-// Find the root element
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
     console.error("Root element not found");
 } else {
-    // ✅ Create root once & render App inside ErrorBoundary
     const root = ReactDOM.createRoot(rootElement);
     root.render(
         <ErrorBoundary>
-            {/* You can remove React.StrictMode for debugging */}
             <React.StrictMode>
                 <App />
             </React.StrictMode>
@@ -53,5 +49,4 @@ if (!rootElement) {
     );
 }
 
-// Optional: Log performance metrics
 reportWebVitals();

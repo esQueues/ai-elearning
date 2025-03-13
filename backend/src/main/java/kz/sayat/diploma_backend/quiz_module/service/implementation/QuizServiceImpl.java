@@ -132,11 +132,9 @@ public class QuizServiceImpl implements QuizService {
             question.setQuestionText(qDto.getQuestionText());
             question.setQuiz(quiz);
 
-            // ⚠️ Instead of replacing, update existing answers
             Map<Integer, Answer> existingAnswers = question.getAnswers().stream()
                 .collect(Collectors.toMap(Answer::getId, a -> a));
 
-            // Create a list to hold updated answers
             List<Answer> answersToKeep = new ArrayList<>();
 
             for (AnswerDto aDto : qDto.getAnswers()) {
@@ -147,7 +145,6 @@ public class QuizServiceImpl implements QuizService {
                 answersToKeep.add(answer);
             }
 
-            // ⚠️ Instead of `setAnswers()`, modify the list directly
             question.getAnswers().clear();
             question.getAnswers().addAll(answersToKeep);
         }

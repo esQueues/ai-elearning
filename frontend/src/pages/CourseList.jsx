@@ -12,14 +12,14 @@ const CourseList = () => {
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
             setDebouncedQuery(searchQuery);
-        }, 1000); // Delay of 500ms
+        }, 1000);
 
-        return () => clearTimeout(delayDebounce); // Cleanup function to clear timeout
+        return () => clearTimeout(delayDebounce);
     }, [searchQuery]);
 
     useEffect(() => {
         fetchCourses(debouncedQuery);
-    }, [debouncedQuery]); // Fetch data only when debouncedQuery updates
+    }, [debouncedQuery]);
 
     const fetchCourses = (query) => {
         setLoading(true);

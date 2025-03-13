@@ -63,7 +63,6 @@ const AddLecture = () => {
         }
     };
 
-    // Function to check if the URL is a YouTube video
     const getYouTubeEmbedUrl = (url) => {
         const match = url.match(
             /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
@@ -105,7 +104,6 @@ const AddLecture = () => {
                     {urlError && <div className="invalid-feedback">{urlError}</div>}
                 </div>
 
-                {/* URL Preview Section */}
                 {url && !urlError && (
                     <div className="mb-3">
                         <label className="form-label">Preview</label>
@@ -122,7 +120,6 @@ const AddLecture = () => {
                                     allowFullScreen
                                 ></iframe>
                             ) : (
-                                // Show link preview for non-YouTube URLs
                                 <a href={url} target="_blank" rel="noopener noreferrer">
                                     {url}
                                 </a>
@@ -131,7 +128,6 @@ const AddLecture = () => {
                     </div>
                 )}
 
-                {/* Buttons */}
                 <button type="submit" className="btn btn-primary" disabled={loading}>
                     {loading ? "Adding..." : "Add Lecture"}
                 </button>

@@ -34,12 +34,10 @@ import CompletedCourses from "./pages/CompletedCourses";
 const AppRoutes = () => {
     return (
         <Routes>
-            {/* ✅ Public Routes (без Navbar) */}
             <Route path="/" element={<Login />} />
             <Route path="/register/student" element={<RegisterStudent />} />
             <Route path="/register/teacher" element={<RegisterTeacher />} />
 
-            {/* ✅ Protected Routes (с Navbar) */}
             {/*<Route element={<ProtectedRoute />}>*/}
                 <Route element={<NavbarWrapper />}>
                     <Route path="/dashboard" element={<DashboardPage />} />
@@ -79,7 +77,6 @@ const AppRoutes = () => {
     );
 };
 
-/** ✅ Wraps Navbar only for authenticated users */
 const NavbarWrapper = () => {
     return (
         <>

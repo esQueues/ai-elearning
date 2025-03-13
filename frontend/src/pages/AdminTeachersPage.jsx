@@ -6,7 +6,6 @@
         const [teachers, setTeachers] = useState([]);
         const [loading, setLoading] = useState(true);
 
-        // Fetch all teachers
         useEffect(() => {
             const fetchTeachers = async () => {
                 try {
@@ -21,7 +20,6 @@
             fetchTeachers();
         }, []);
 
-        // Handle delete teacher
         const handleDelete = async (teacherId) => {
             try {
                 await axios.delete(`/api/teachers/${teacherId}`, { withCredentials: true });

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 const axiosInstance = axios.create({
     baseURL: "/api",
-    withCredentials: true, // Ensures cookies are sent
+    withCredentials: true,
 });
 
 export const setupInterceptors = (navigate) => {

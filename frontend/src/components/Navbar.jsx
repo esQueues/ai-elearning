@@ -100,7 +100,6 @@ const Navbar = () => {
                                     </Link>
                                 </li>
 
-                                {/* Добавленная ссылка на завершенные курсы */}
                                 {userType === "STUDENT" && (
                                     <li>
                                         <Link className="dropdown-item" to="/completed-courses">

@@ -1,6 +1,6 @@
 import { Link, Outlet } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js"; // Ensure Bootstrap JS is loaded
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 const Layout = ({ student }) => {
     return (
@@ -11,7 +11,6 @@ const Layout = ({ student }) => {
                         My Learning
                     </Link>
 
-                    {/* ✅ Bootstrap native toggle button */}
                     <button
                         className="navbar-toggler"
                         type="button"

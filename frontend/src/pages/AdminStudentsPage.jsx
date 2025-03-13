@@ -6,7 +6,6 @@ const AdminStudentsPage = () => {
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Fetch all students
     useEffect(() => {
         const fetchStudents = async () => {
             try {
@@ -21,7 +20,6 @@ const AdminStudentsPage = () => {
         fetchStudents();
     }, []);
 
-    // Handle delete student
     const handleDelete = async (studentId) => {
         try {
             await axios.delete(`/api/student/${studentId}`, { withCredentials: true });
@@ -32,7 +30,6 @@ const AdminStudentsPage = () => {
         }
     };
 
-    // Render loading or students list
     if (loading) {
         return <div>Loading...</div>;
     }
