@@ -116,9 +116,15 @@ const CourseManage = () => {
                 ) : (
                     <>
                         <h1 className="fw-bold">{course.title}</h1>
+                        <p className={`fw-bold ${course.public ? "text-success" : "text-warning"}`}>
+                            Status: {course.public ? "Published" : "Under Review"}
+                        </p>
+
                         <p className="text-muted">{course.description}</p>
                         <button className="btn btn-warning" onClick={handleEditClick}>Edit</button>
                     </>
+
+
                 )}
             </div>
 

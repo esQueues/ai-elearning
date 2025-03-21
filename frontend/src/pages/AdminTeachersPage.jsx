@@ -56,7 +56,7 @@
                                     <td>{teacher.lastname}</td>
                                     <td>{teacher.email}</td>
                                     <td>
-                                        <Link to={`/admin/teachers/${teacher.id}`} className="btn btn-info me-2">
+                                        <Link to={`/teachers/public/${teacher.id}`} className="btn btn-info me-2">
                                             View Profile
                                         </Link>
                                         <button
