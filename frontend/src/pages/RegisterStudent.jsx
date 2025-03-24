@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import {Link, useNavigate} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { TextField, Button, Typography, Paper, Box, CssBaseline, Grid } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import logo from "../img/E- (4).png"; // Your logo
+
+const theme = createTheme();
 
 const RegisterStudent = () => {
     const [email, setEmail] = useState("");
@@ -28,26 +33,44 @@ const RegisterStudent = () => {
     };
 
     return (
-        <div style={styles.container}>
-            <h2>Register</h2>
-            <form onSubmit={handleRegister} style={styles.form}>
-                <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                <input type="text" placeholder="First Name" value={firstname} onChange={(e) => setFirstname(e.target.value)} required />
-                <input type="text" placeholder="Last Name" value={lastname} onChange={(e) => setLastname(e.target.value)} required />
-                <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required />
-                <input type="number" placeholder="Grade Level" value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} required />
-                <input type="text" placeholder="School Info" value={schoolInfo} onChange={(e) => setSchoolInfo(e.target.value)} required />
-                <button type="submit">Register as Student</button>
-            </form>
-            <p>Are you teacher? <Link to="/register/teacher">Register here</Link></p>
-        </div>
-    );
-};
+        <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <Box sx={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Paper elevation={6} sx={{ width: "95%", maxWidth: "750px", padding: 5 }}>
+                    <Grid container>
+                        {/* Left Side - Logo */}
+                        <Grid item xs={12} md={5} sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                            <img src={logo} alt="Logo" style={{ width: "80%", maxWidth: "250px" }} />
+                        </Grid>
 
-const styles = {
-    container: { textAlign: "center", marginTop: "50px" },
-    form: { display: "flex", flexDirection: "column", gap: "10px", maxWidth: "300px", margin: "auto" }
+                        {/* Right Side - Registration Form */}
+                        <Grid item xs={12} md={7}>
+                            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                <Typography component="h1" variant="h5">
+                                    Register as Student
+                                </Typography>
+                                <Box component="form" onSubmit={handleRegister} sx={{ mt: 2, width: "100%" }}>
+                                    <TextField label="Email" type="email" fullWidth required value={email} onChange={(e) => setEmail(e.target.value)} />
+                                    <TextField label="Password" type="password" fullWidth required value={password} onChange={(e) => setPassword(e.target.value)} />
+                                    <TextField label="First Name" type="text" fullWidth required value={firstname} onChange={(e) => setFirstname(e.target.value)} />
+                                    <TextField label="Last Name" type="text" fullWidth required value={lastname} onChange={(e) => setLastname(e.target.value)} />
+                                    <TextField label="Birth Date" type="date" fullWidth required InputLabelProps={{ shrink: true }} value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                                    <TextField label="Grade Level" type="number" fullWidth required value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} />
+                                    <TextField label="School Info" type="text" fullWidth required value={schoolInfo} onChange={(e) => setSchoolInfo(e.target.value)} />
+                                    <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
+                                        Register as Student
+                                    </Button>
+                                    <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+                                        Are you a teacher? <Link to="/register/teacher">Register here</Link>
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Grid>
+                    </Grid>
+                </Paper>
+            </Box>
+        </ThemeProvider>
+    );
 };
 
 export default RegisterStudent;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import logo from '../img/E- (4).png'; // Your logo
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -67,7 +68,9 @@ const Navbar = () => {
     return (
         <nav className="navbar navbar-expand-lg bg-dark text-light px-3">
             <div className="container d-flex justify-content-between align-items-center">
-                <Link className="navbar-brand fw-bold mx-auto text-white" to={dashboardLink}>dashboard</Link>
+                <Link className="navbar-brand mx-auto" to={dashboardLink}>
+                    <img src={logo} alt="Logo" style={{ height: '40px' }} />
+                </Link>
 
                 <button className="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span className="navbar-toggler-icon"></span>
@@ -92,8 +95,6 @@ const Navbar = () => {
                             </button>
 
                             <ul className="dropdown-menu dropdown-menu-end">
-
-
                                 <li>
                                     <Link className="dropdown-item" to={profileLink}>
                                         <i className="fas fa-user"></i> Profile

@@ -1,10 +1,11 @@
 import { Link, Outlet } from "react-router-dom";
+import Footer from "../components/Footer"; // Добавляем Footer
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 const Layout = ({ student }) => {
     return (
-        <div>
+        <div className="d-flex flex-column min-vh-100">
             <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
                 <div className="container">
                     <Link className="navbar-brand fw-bold fs-4" to="/dashboard">
@@ -47,9 +48,13 @@ const Layout = ({ student }) => {
                 </div>
             </nav>
 
-            <div className="container mt-4">
+            {/* Контентная часть, растягивающаяся на всю доступную высоту */}
+            <div className="container flex-grow-1 mt-4">
                 <Outlet />
             </div>
+
+            {/* Футер внизу страницы */}
+            <Footer />
         </div>
     );
 };

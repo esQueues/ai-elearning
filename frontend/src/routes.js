@@ -30,6 +30,7 @@ import AdminFeedbacksPage from "./pages/AdminFeedbacksPage";
 import AdminCoursePage from "./pages/AdminCoursePage";
 import PublicTeacherProfile from "./pages/PublicTeacherProfile";
 import CompletedCourses from "./pages/CompletedCourses";
+import Footer from "./components/Footer";
 
 const AppRoutes = () => {
     return (
@@ -79,11 +80,15 @@ const AppRoutes = () => {
 
 const NavbarWrapper = () => {
     return (
-        <>
+        <div className="d-flex flex-column min-vh-100">
             <Navbar />
-            <Outlet />
-        </>
+            <div className="flex-grow-1">
+                <Outlet />
+            </div>
+            <Footer />
+        </div>
     );
 };
+
 
 export default AppRoutes;
