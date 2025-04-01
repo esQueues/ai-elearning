@@ -1,9 +1,10 @@
-CREATE TABLE users(
-    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    role VARCHAR(50),
-    firstname VARCHAR(255) NOT NULL ,
-    lastname VARCHAR(255) NOT NULL ,
-    created_at TIMESTAMP
-)
+CREATE TABLE users
+(
+    id         bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    email      varchar(255) NOT NULL UNIQUE,
+    password   varchar(255) NOT NULL,
+    role       varchar(255),
+    firstname  varchar(255) NOT NULL,
+    lastname   varchar(255) NOT NULL,
+    created_at timestamp
+);
