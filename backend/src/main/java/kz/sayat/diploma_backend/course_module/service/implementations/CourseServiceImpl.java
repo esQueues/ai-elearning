@@ -173,16 +173,22 @@ public class CourseServiceImpl implements CourseService {
     public boolean isCourseCompleted(int studentId, int courseId) {
         List<Module> modules = moduleRepository.findByCourseId(courseId);
 
+        if (modules.isEmpty()) {
+            return false;
+        }
+
         Student student = studentRepository.findById(studentId)
             .orElseThrow(() -> new RuntimeException("Student not found"));
 
         for (Module module : modules) {
             List<Quiz> quizzes = quizRepository.findQuizzesByModule_Id(module.getId());
 
-            for (Quiz quiz : quizzes) {
-                QuizAttempt lastAttempt = attemptRepository.findTopByStudentAndQuizOrderByAttemptNumberDesc(student, quiz);
+            if (!quizzes.isEmpty()) {
+                boolean allQuizzesPassed = quizzes.stream()
+                    .map(quiz -> attemptRepository.findTopByStudentAndQuizOrderByAttemptNumberDesc(student, quiz))
+                    .allMatch(attempt -> attempt != null && attempt.isPassed());
 
-                if (lastAttempt == null || !lastAttempt.isPassed()) {
+                if (!allQuizzesPassed) {
                     return false;
                 }
             }
@@ -190,6 +196,7 @@ public class CourseServiceImpl implements CourseService {
 
         return true;
     }
+
 
     public void updateEnrollmentStatus(int studentId, int courseId) {
         Enrollment enrollment = enrollmentRepository.findById(new EnrollmentId(studentId, courseId))
@@ -297,14 +304,21 @@ public class CourseServiceImpl implements CourseService {
         List<Course> courses = enrollmentRepository.findCoursesByStudentId(student.getId());
 
         return courses.stream()
-            .filter(course -> isCourseCompleted(student.getId(), course.getId()))
+            .filter(course -> {
+                boolean completed = isCourseCompleted(student.getId(), course.getId());
+                if (completed) {
+                    updateEnrollmentStatus(student.getId(), course.getId());  // Ensure it's marked as completed
+                }
+                return completed;
+            })
             .map(course -> {
                 CourseSummaryDto dto = courseMapper.toCourseSummaryDto(course);
                 double progress = calculateCourseProgress(student.getId(), course.getId());
-                dto.setProgress(progress);  // Добавляем прогресс в DTO
+                dto.setProgress(progress);
                 return dto;
             })
             .collect(Collectors.toList());
     }
+
 
 }

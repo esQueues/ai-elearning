@@ -1,5 +1,6 @@
 package kz.sayat.diploma_backend.quiz_module.service.implementation;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import kz.sayat.diploma_backend.auth_module.models.Student;
 import kz.sayat.diploma_backend.auth_module.service.StudentService;
@@ -33,6 +34,8 @@ public class FeedbackServiceImpl implements FeedbackService {
     private final StudentService studentService;
     @Value("${gemini.api-key}")
     private String apiKey;
+
+
     @Value("${gemini.api-url}")
     private String apiUrl;
 
