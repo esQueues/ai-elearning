@@ -3,9 +3,7 @@ package kz.sayat.diploma_backend.quiz_module.service.implementation;
 import jakarta.transaction.Transactional;
 import kz.sayat.diploma_backend.auth_module.models.Student;
 import kz.sayat.diploma_backend.auth_module.service.StudentService;
-import kz.sayat.diploma_backend.course_module.models.Course;
 import kz.sayat.diploma_backend.quiz_module.dto.*;
-import kz.sayat.diploma_backend.quiz_module.mapper.QuestionMapper;
 import kz.sayat.diploma_backend.quiz_module.service.QuizService;
 import kz.sayat.diploma_backend.util.exceptions.ResourceNotFoundException;
 import kz.sayat.diploma_backend.course_module.dto.QuizSummaryDto;
@@ -18,6 +16,7 @@ import kz.sayat.diploma_backend.quiz_module.repository.AttemptAnswerRepository;
 import kz.sayat.diploma_backend.quiz_module.repository.QuizAttemptRepository;
 import kz.sayat.diploma_backend.quiz_module.repository.QuizRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -36,13 +35,12 @@ public class QuizServiceImpl implements QuizService {
     private final QuizAttemptRepository quizAttemptRepository;
     private final AttemptAnswerRepository attemptAnswerRepository;
     private final QuizAttemptMapper quizAttemptMapper;
-    private final QuestionMapper questionMapper;
     private final StudentService studentService;
     private final QuizMapper quizMapper;
 
 
-
     @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public QuizDto createQuiz(QuizDto dto, int moduleId) {
 
         Module module = moduleRepository.findById(moduleId).
@@ -101,6 +99,7 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public void delete(int quizId) {
         Quiz quiz = quizRepository.findById(quizId)
             .orElseThrow(() -> new ResourceNotFoundException("quiz not found"));
@@ -118,6 +117,7 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public void update(int quizId, QuizDto dto) {
         Quiz quiz = quizRepository.findById(quizId)
             .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));

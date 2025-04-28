@@ -10,8 +10,11 @@ import org.springframework.security.core.Authentication;
 import java.util.Map;
 
 public interface AuthService {
+
     UserDto login(HttpServletRequest request, HttpServletResponse response, LoginRequest authRequest);
+
     void register(RegisterRequest request);
+
     void registerTeacher(RegisterRequest request);
 
     Map<String, String> giveRole(Authentication authentication);

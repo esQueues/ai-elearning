@@ -16,6 +16,7 @@ import kz.sayat.diploma_backend.quiz_module.repository.QuizAttemptRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -32,9 +33,9 @@ public class FeedbackServiceImpl implements FeedbackService {
     private final FeedbackRepository feedbackRepository;
     private final QuizAttemptRepository quizAttemptRepository;
     private final StudentService studentService;
+
     @Value("${gemini.api-key}")
     private String apiKey;
-
 
     @Value("${gemini.api-url}")
     private String apiUrl;
@@ -71,6 +72,7 @@ public class FeedbackServiceImpl implements FeedbackService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public List<FeedbackDto> getAllFeedback() {
         List<Feedback> feedbacks = feedbackRepository.findAll();
 
@@ -83,7 +85,6 @@ public class FeedbackServiceImpl implements FeedbackService {
                 String courseTitle = feedback.getQuizAttempt().getQuiz().getModule().getCourse().getTitle();
                 String quizTitle = feedback.getQuizAttempt().getQuiz().getTitle();
                 String attemptTime = feedback.getCreatedAt().format(formatter);
-
 
 
                 return new FeedbackDto(
@@ -100,6 +101,7 @@ public class FeedbackServiceImpl implements FeedbackService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteFeedback(int id) {
         feedbackRepository.deleteById(id);
     }
@@ -170,7 +172,4 @@ public class FeedbackServiceImpl implements FeedbackService {
 
         return "No feedback available.";
     }
-
-
-
 }

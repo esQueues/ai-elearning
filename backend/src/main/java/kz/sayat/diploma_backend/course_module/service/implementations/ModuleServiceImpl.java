@@ -9,13 +9,12 @@ import kz.sayat.diploma_backend.course_module.mapper.ModuleMapper;
 import kz.sayat.diploma_backend.course_module.models.Course;
 import kz.sayat.diploma_backend.course_module.models.Module;
 import kz.sayat.diploma_backend.course_module.repository.CourseRepository;
-import kz.sayat.diploma_backend.course_module.repository.LectureRepository;
 import kz.sayat.diploma_backend.course_module.repository.ModuleRepository;
 import kz.sayat.diploma_backend.course_module.service.ModuleService;
-import kz.sayat.diploma_backend.quiz_module.repository.QuizRepository;
 import kz.sayat.diploma_backend.quiz_module.service.implementation.QuizServiceImpl;
 import kz.sayat.diploma_backend.util.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,11 +30,10 @@ public class ModuleServiceImpl implements ModuleService {
     private final CourseRepository courseRepository;
     private final QuizServiceImpl quizService;
     private final LectureServiceImpl lectureService;
-    private final LectureRepository lectureRepository;
-    private final QuizRepository quizRepository;
     private final ModuleMapper moduleMapper;
 
     @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public ModuleDto createModule(ModuleDto dto, int courseId) {
         Course course = courseRepository.findById(courseId)
             .orElseThrow(() -> new NoSuchElementException("Course with ID " + dto.getCourseId() + " not found"));
@@ -60,18 +58,17 @@ public class ModuleServiceImpl implements ModuleService {
     }
 
     @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public void delete(int moduleId) {
         if(!moduleRepository.existsById(moduleId)) {
             throw new ResourceNotFoundException("Module with ID " + moduleId + " not found");
         }
-//        Module module= moduleRepository.findById(moduleId).orElseThrow(() -> new ResourceNotFoundException("Module with ID " + moduleId + " not found"));
-//        lectureRepository.deleteByModuleId(moduleId);
-//        quizRepository.deleteByModuleId(moduleId);
         moduleRepository.deleteById(moduleId);
 
     }
 
     @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public void edit(int id, ModuleDto dto) {
         Module module= moduleRepository.findById(id).orElseThrow(() ->
             new ResourceNotFoundException("Module with ID " + id + " not found"));

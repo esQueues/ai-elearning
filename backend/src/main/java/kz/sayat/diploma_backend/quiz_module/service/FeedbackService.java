@@ -8,7 +8,9 @@ import org.springframework.security.core.Authentication;
 import java.util.List;
 
 public interface FeedbackService {
+
     String generateFeedback(int attemptId);
+
     String getFeedbackOfStudent(int attemptId, Authentication authentication);
 
     List<FeedbackDto> getAllFeedback();

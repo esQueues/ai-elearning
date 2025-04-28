@@ -10,6 +10,7 @@ import kz.sayat.diploma_backend.course_module.repository.ModuleRepository;
 import kz.sayat.diploma_backend.course_module.service.LectureService;
 import kz.sayat.diploma_backend.util.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class LectureServiceImpl implements LectureService {
 
 
     @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public LectureDto createLecture(LectureDto dto, int moduleId) {
         Module module = moduleRepository.findById(moduleId).
             orElseThrow(NoSuchElementException::new);
@@ -45,17 +47,18 @@ public class LectureServiceImpl implements LectureService {
 
     @Override
     public List<LectureDto> findAllLecturesByModuleId(int moduleId) {
-
         List<Lecture> lectures = lectureRepository.findByModule_Id(moduleId);
         return mapper.toLectureDtoList(lectures);
     }
 
     @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public void deleteLecture(int id) {
         lectureRepository.deleteById(id);
     }
 
     @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public LectureDto editLecture(int id, LectureDto dto) {
         Lecture lecture=lectureRepository.findById(id).orElseThrow
             (()-> new ResourceNotFoundException("lecture not found"));

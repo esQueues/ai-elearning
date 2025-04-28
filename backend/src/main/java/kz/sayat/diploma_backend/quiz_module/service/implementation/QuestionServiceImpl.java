@@ -9,6 +9,7 @@ import kz.sayat.diploma_backend.quiz_module.models.Quiz;
 import kz.sayat.diploma_backend.quiz_module.repository.QuestionRepository;
 import kz.sayat.diploma_backend.quiz_module.repository.QuizRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -22,6 +23,8 @@ public class QuestionServiceImpl implements QuestionService {
     private final QuizRepository quizRepository;
     private final QuestionMapper questionMapper;
 
+    @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public QuestionDto createQuestion(QuestionDto dto, int quizId) {
 
         Quiz quiz = quizRepository.findById(quizId)
@@ -34,6 +37,8 @@ public class QuestionServiceImpl implements QuestionService {
         return questionMapper.toDto(question);
     }
 
+    @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public List<QuestionDto> createQuestions(List<QuestionDto> dtos, int quizId) {
 
         Quiz quiz = quizRepository.findById(quizId)
@@ -63,6 +68,8 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
 
+    @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public void deleteQuestion(int questionId) {
         if (!questionRepository.existsById(questionId)) {
             throw new ResourceNotFoundException("quiz not found");

@@ -15,6 +15,7 @@ import kz.sayat.diploma_backend.auth_module.models.User;
 import kz.sayat.diploma_backend.auth_module.repository.TeacherRepository;
 import kz.sayat.diploma_backend.auth_module.security.MyUserDetails;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,10 +49,11 @@ public class TeacherServiceImpl implements TeacherService {
         teacher.setFirstname(teacherDto.getFirstname());
         teacher.setLastname(teacherDto.getLastname());
         teacher.setBio(teacherDto.getBio());
-        Teacher savedTeacher = teacherRepository.save(teacher);
+        teacherRepository.save(teacher);
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     public void deleteTeacher(int id) {
         Teacher teacher = teacherRepository.findById(id)

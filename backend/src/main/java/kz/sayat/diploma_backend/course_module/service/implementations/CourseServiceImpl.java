@@ -30,6 +30,7 @@ import kz.sayat.diploma_backend.course_module.repository.CourseRepository;
 import kz.sayat.diploma_backend.auth_module.repository.TeacherRepository;
 import kz.sayat.diploma_backend.auth_module.security.MyUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import kz.sayat.diploma_backend.course_module.models.Module;
@@ -56,6 +57,7 @@ public class CourseServiceImpl implements CourseService {
     private final QuizAttemptRepository attemptRepository;
 
     @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public CourseDto createCourse(CourseDto dto, Authentication authentication) {
 
         Course course = mapper.toCourse(dto);
@@ -141,6 +143,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    @PreAuthorize("hasRole('TEACHER') or ('ADMIN')")
     public List<StudentDto> getStudentForCourse(int id) {
         List<Student> students = enrollmentRepository.findStudentsByCourseId(id);
         return studentMapper.toStudentDtoList(students);
@@ -197,7 +200,6 @@ public class CourseServiceImpl implements CourseService {
         return true;
     }
 
-
     public void updateEnrollmentStatus(int studentId, int courseId) {
         Enrollment enrollment = enrollmentRepository.findById(new EnrollmentId(studentId, courseId))
             .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found"));
@@ -253,7 +255,9 @@ public class CourseServiceImpl implements CourseService {
         return totalScore / totalQuizzes;
     }
 
+
     @Override
+    @PreAuthorize("hasRole('TEACHER')")
     public void deleteCourse(int id) {
         courseRepository.deleteById(id);
     }
@@ -269,6 +273,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public void approve(int id) {
         Course course= courseRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
@@ -307,7 +312,7 @@ public class CourseServiceImpl implements CourseService {
             .filter(course -> {
                 boolean completed = isCourseCompleted(student.getId(), course.getId());
                 if (completed) {
-                    updateEnrollmentStatus(student.getId(), course.getId());  // Ensure it's marked as completed
+                    updateEnrollmentStatus(student.getId(), course.getId());
                 }
                 return completed;
             })

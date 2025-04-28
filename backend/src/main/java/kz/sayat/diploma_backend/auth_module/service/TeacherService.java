@@ -9,13 +9,22 @@ import org.springframework.security.core.Authentication;
 import java.util.List;
 
 public interface TeacherService {
+
     void save(Teacher teacher);
+
     TeacherDto getProfile(Authentication authentication);
+
     void updateTeacher(Authentication authentication, TeacherDto teacherDto);
+
     void deleteTeacher(int id);
+
     TeacherDto getTeacherById(int id);
+
     List<TeacherDto> getAllTeachers();
+
     Teacher getTeacherFromUser(Authentication authentication);
+
     List<CourseSummaryDto> getCreatedCourses(Authentication authentication);
+
     void changePassword(Authentication authentication, PasswordDto changePasswordDto);
 }

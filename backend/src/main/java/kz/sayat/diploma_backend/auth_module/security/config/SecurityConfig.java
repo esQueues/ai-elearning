@@ -47,7 +47,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Разрешаем preflight-запросы
                 .requestMatchers("/api/auth/register/**", "/api/auth/login").permitAll()
                 .requestMatchers( "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/api/teachers","/api/courses").permitAll()
+//                .requestMatchers("/api/teachers","/api/courses").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session ->
