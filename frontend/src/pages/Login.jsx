@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, TextField, Typography, CssBaseline, Box, Alert, Paper, Grid } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import logo from "../img/logo.png"; // Your logo
+import logo from "../img/logo.png"; // Your logo Assel K
 
 const theme = createTheme();
 
