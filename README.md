@@ -12,8 +12,9 @@
 - **frontend**
 - **nginx**
 
+### Team
+
 ### Run
 ```bash
 docker-compose up --build
-
 
