@@ -1,0 +1,5 @@
+# Ignore environment files
+envs/containers.env
+
+# Ignore database data
+postgres_data/
