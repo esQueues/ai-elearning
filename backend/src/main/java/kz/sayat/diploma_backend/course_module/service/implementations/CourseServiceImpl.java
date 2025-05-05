@@ -11,6 +11,7 @@ import kz.sayat.diploma_backend.auth_module.service.StudentService;
 import kz.sayat.diploma_backend.auth_module.service.TeacherService;
 import kz.sayat.diploma_backend.course_module.dto.CourseSummaryDto;
 import kz.sayat.diploma_backend.course_module.dto.ModuleDto;
+import kz.sayat.diploma_backend.course_module.dto.QuizSummaryDto;
 import kz.sayat.diploma_backend.course_module.models.Enrollment;
 import kz.sayat.diploma_backend.course_module.models.EnrollmentId;
 import kz.sayat.diploma_backend.course_module.repository.EnrollmentRepository;
@@ -54,7 +55,7 @@ public class CourseServiceImpl implements CourseService {
     private final ModuleRepository moduleRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final QuizRepository quizRepository;
-    private final QuizAttemptRepository attemptRepository;
+    private final QuizAttemptRepository quizAttemptRepository;
 
     @Override
     @PreAuthorize("hasRole('TEACHER')")
@@ -80,13 +81,14 @@ public class CourseServiceImpl implements CourseService {
         boolean isEnrolled = false;
         boolean isTeacher = false;
         Integer authenticatedStudentId = null;
+        Student authenticatedStudent = null;
 
         if (auth != null && auth.isAuthenticated()) {
             MyUserDetails userDetails = (MyUserDetails) auth.getPrincipal();
             UserRole role = userDetails.getUser().getRole();
 
             if (role == UserRole.STUDENT) {
-                Student authenticatedStudent = studentService.getStudentFromUser(auth);
+                authenticatedStudent = studentService.getStudentFromUser(auth);
                 authenticatedStudentId = authenticatedStudent.getId();
                 isEnrolled = enrollmentRepository.existsByStudentAndCourse(authenticatedStudent, course);
             } else if (role == UserRole.TEACHER) {
@@ -103,9 +105,20 @@ public class CourseServiceImpl implements CourseService {
             for (ModuleDto moduleDto : courseDto.getModules()) {
                 double progress = calculateModuleProgress(authenticatedStudentId, moduleDto.getId());
                 moduleDto.setProgress(progress);
+
+                for (QuizSummaryDto quizSummary : moduleDto.getQuizzes()) {
+                    Quiz quiz = quizRepository.findById(quizSummary.getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
+                    QuizAttempt latestAttempt = quizAttemptRepository
+                        .findTopByStudentAndQuizOrderByAttemptNumberDesc(authenticatedStudent, quiz);
+                    quizSummary.setPassed(latestAttempt != null && latestAttempt.isPassed());
+                }
             }
         } else {
-            courseDto.getModules().forEach(module -> module.setProgress(0));
+            courseDto.getModules().forEach(module -> {
+                module.setProgress(0);
+                module.getQuizzes().forEach(quiz -> quiz.setPassed(false)); // Явно устанавливаем passed: false
+            });
         }
 
         return courseDto;
@@ -188,7 +201,7 @@ public class CourseServiceImpl implements CourseService {
 
             if (!quizzes.isEmpty()) {
                 boolean allQuizzesPassed = quizzes.stream()
-                    .map(quiz -> attemptRepository.findTopByStudentAndQuizOrderByAttemptNumberDesc(student, quiz))
+                    .map(quiz -> quizAttemptRepository.findTopByStudentAndQuizOrderByAttemptNumberDesc(student, quiz))
                     .allMatch(attempt -> attempt != null && attempt.isPassed());
 
                 if (!allQuizzesPassed) {
@@ -245,7 +258,7 @@ public class CourseServiceImpl implements CourseService {
             .orElseThrow(() -> new RuntimeException("Student not found"));
 
         for (Quiz quiz : quizzes) {
-            QuizAttempt lastAttempt = attemptRepository.findTopByStudentAndQuizOrderByAttemptNumberDesc(student, quiz);
+            QuizAttempt lastAttempt = quizAttemptRepository.findTopByStudentAndQuizOrderByAttemptNumberDesc(student, quiz);
 
             if (lastAttempt != null && lastAttempt.isPassed()) {
                 totalScore += lastAttempt.getScore();

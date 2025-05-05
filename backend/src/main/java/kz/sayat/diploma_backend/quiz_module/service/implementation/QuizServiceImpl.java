@@ -43,6 +43,9 @@ public class QuizServiceImpl implements QuizService {
     @PreAuthorize("hasRole('TEACHER')")
     public QuizDto createQuiz(QuizDto dto, int moduleId) {
 
+        if (dto.getPassingScore() <= 0) {
+            dto.setPassingScore(50);
+        }
         Module module = moduleRepository.findById(moduleId).
             orElseThrow(() -> new ResourceNotFoundException("module not found"));
         Quiz quiz = quizMapper.toQuiz(dto, module);
