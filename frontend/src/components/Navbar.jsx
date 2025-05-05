@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import logo from '../img/logo.png'; // Your logo
+import logo from '../img/logo.png'; // Your logo is
 
 const Navbar = () => {
     const navigate = useNavigate();
