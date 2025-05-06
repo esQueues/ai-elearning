@@ -78,7 +78,7 @@ const QuizProfile = () => {
 
     return (
         <div className="container mt-5">
-            <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>Артқа</button>
+            <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>Back</button>
 
             <h1 className="fw-bold">{quiz.title}</h1>
             <hr />
@@ -133,7 +133,7 @@ const QuizProfile = () => {
 
             <div className="text-center mt-4">
                 <button className="btn btn-primary btn-lg" onClick={() => navigate(`/quiz/${quizId}`)}>
-                    Start Quiz
+                    Restart Quiz
                 </button>
             </div>
         </div>
