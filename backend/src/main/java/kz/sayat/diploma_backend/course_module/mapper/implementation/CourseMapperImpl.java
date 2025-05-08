@@ -1,5 +1,5 @@
 package kz.sayat.diploma_backend.course_module.mapper.implementation;
-import kz.sayat.diploma_backend.auth_module.mapper.TeacherMapper;
+
 import kz.sayat.diploma_backend.auth_module.mapper.implementation.TeacherMapperHelper;
 import kz.sayat.diploma_backend.course_module.dto.CourseDto;
 import kz.sayat.diploma_backend.course_module.dto.CourseSummaryDto;
@@ -8,8 +8,6 @@ import kz.sayat.diploma_backend.course_module.mapper.ModuleMapper;
 import kz.sayat.diploma_backend.course_module.models.Course;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

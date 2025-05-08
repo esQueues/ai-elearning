@@ -2,7 +2,6 @@ package kz.sayat.diploma_backend.course_module.controller;
 
 import kz.sayat.diploma_backend.course_module.dto.LectureDto;
 import kz.sayat.diploma_backend.course_module.dto.ModuleDto;
-import kz.sayat.diploma_backend.course_module.models.Module;
 import kz.sayat.diploma_backend.course_module.service.LectureService;
 import kz.sayat.diploma_backend.course_module.service.ModuleService;
 import lombok.RequiredArgsConstructor;

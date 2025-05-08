@@ -1,8 +1,6 @@
 package kz.sayat.diploma_backend.quiz_module.service;
 
 import kz.sayat.diploma_backend.quiz_module.dto.FeedbackDto;
-import kz.sayat.diploma_backend.quiz_module.dto.QuestionDto;
-import kz.sayat.diploma_backend.quiz_module.models.Feedback;
 import org.springframework.security.core.Authentication;
 
 import java.util.List;

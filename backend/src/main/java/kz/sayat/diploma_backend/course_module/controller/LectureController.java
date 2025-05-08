@@ -1,7 +1,6 @@
 package kz.sayat.diploma_backend.course_module.controller;
 
 import kz.sayat.diploma_backend.course_module.dto.LectureDto;
-import kz.sayat.diploma_backend.course_module.models.Lecture;
 import kz.sayat.diploma_backend.course_module.service.LectureService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

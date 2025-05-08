@@ -1,8 +1,6 @@
 package kz.sayat.diploma_backend.course_module.dto;
 
-import kz.sayat.diploma_backend.quiz_module.dto.QuizDto;
 import lombok.Data;
-
 import java.util.List;
 
 @Data

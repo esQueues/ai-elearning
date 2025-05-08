@@ -1,6 +1,5 @@
 package kz.sayat.diploma_backend.course_module.mapper.implementation;
 
-import kz.sayat.diploma_backend.course_module.mapper.CourseMapper;
 import kz.sayat.diploma_backend.course_module.mapper.LectureMapper;
 import kz.sayat.diploma_backend.course_module.mapper.ModuleMapper;
 import kz.sayat.diploma_backend.course_module.models.Module;

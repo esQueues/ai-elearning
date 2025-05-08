@@ -1,11 +1,9 @@
 package kz.sayat.diploma_backend.quiz_module.service.implementation;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import kz.sayat.diploma_backend.auth_module.models.Student;
 import kz.sayat.diploma_backend.auth_module.service.StudentService;
 import kz.sayat.diploma_backend.quiz_module.dto.FeedbackDto;
-import kz.sayat.diploma_backend.quiz_module.repository.AttemptAnswerRepository;
 import kz.sayat.diploma_backend.quiz_module.service.FeedbackService;
 import kz.sayat.diploma_backend.util.exceptions.ResourceNotFoundException;
 import kz.sayat.diploma_backend.quiz_module.dto.GeminiRequest;

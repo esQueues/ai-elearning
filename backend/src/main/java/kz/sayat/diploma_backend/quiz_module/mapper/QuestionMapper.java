@@ -3,7 +3,6 @@ package kz.sayat.diploma_backend.quiz_module.mapper;
 import kz.sayat.diploma_backend.quiz_module.dto.QuestionDto;
 import kz.sayat.diploma_backend.quiz_module.models.Question;
 import kz.sayat.diploma_backend.quiz_module.models.Quiz;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
