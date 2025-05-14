@@ -1,10 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button, TextField, Typography, CssBaseline, Box, Alert, Paper, Grid } from "@mui/material";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import logo from "../img/logo.png"; // Your logo Assel K
-
-const theme = createTheme();
+import logo from "../img/logo.png";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -37,61 +33,62 @@ const Login = () => {
     };
 
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <Box sx={{ minHeight: "70vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Paper elevation={6} sx={{ width: "95%", maxWidth: "750px", padding: 5 }}>
-                    <Grid container>
+        <div className="container-fluid vh-100 d-flex align-items-center justify-content-center">
+            <div className="col-md-8 col-lg-6">
+                <div className="card shadow">
+                    <div className="row g-0">
                         {/* Left Side - Logo */}
-                        <Grid item xs={12} md={5} sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                            <img src={logo} alt="Logo" style={{ width: "80%", maxWidth: "250px" }} />
-                        </Grid>
+                        <div className="col-md-5 d-flex align-items-center justify-content-center p-4">
+                            <img src={logo} alt="EDUPULSE Logo" className="img-fluid" style={{ maxWidth: "200px" }} />
+                        </div>
 
                         {/* Right Side - Login Form */}
-                        <Grid item xs={12} md={7}>
-                            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                <Typography component="h1" variant="h5">
-                                    Sign In
-                                </Typography>
-                                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, width: "100%" }}>
-                                    {error && <Alert severity="error">{error}</Alert>}
-                                    <TextField
-                                        margin="normal"
-                                        required
-                                        fullWidth
-                                        id="email"
-                                        label="Email Address"
-                                        name="email"
-                                        autoComplete="email"
-                                        autoFocus
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                    />
-                                    <TextField
-                                        margin="normal"
-                                        required
-                                        fullWidth
-                                        name="password"
-                                        label="Password"
-                                        type="password"
-                                        id="password"
-                                        autoComplete="current-password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
-                                    <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
-                                        Sign In
-                                    </Button>
-                                    <Typography variant="body2" align="center">
+                        <div className="col-md-7">
+                            <div className="card-body p-5">
+                                <h2 className="card-title text-center mb-4">Sign In</h2>
+
+                                {error && (
+                                    <div className="alert alert-danger" role="alert">
+                                        {error}
+                                    </div>
+                                )}
+
+                                <form onSubmit={handleSubmit}>
+                                    <div className="mb-3">
+                                        <label htmlFor="email" className="form-label">Email Address *</label>
+                                        <input
+                                            type="email"
+                                            className="form-control"
+                                            id="email"
+                                            required
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="mb-4">
+                                        <label htmlFor="password" className="form-label">Password *</label>
+                                        <input
+                                            type="password"
+                                            className="form-control"
+                                            id="password"
+                                            required
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                        />
+                                    </div>
+                                    <button type="submit" className="btn btn-primary w-100 py-2 mb-3">
+                                        SIGN IN
+                                    </button>
+                                    <p className="text-center mt-3">
                                         Don't have an account? <Link to="/register/student">Register here</Link>
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        </Grid>
-                    </Grid>
-                </Paper>
-            </Box>
-        </ThemeProvider>
+                                    </p>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 };
 
