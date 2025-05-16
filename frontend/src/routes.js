@@ -35,44 +35,44 @@ import Footer from "./components/Footer";
 const AppRoutes = () => {
     return (
         <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/register/student" element={<RegisterStudent />} />
-            <Route path="/register/teacher" element={<RegisterTeacher />} />
 
             {/*<Route element={<ProtectedRoute />}>*/}
-                <Route element={<NavbarWrapper />}>
-                    <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
-                    <Route path="/courses/:id" element={<Course />} />
-                    <Route path="/courses/:id/manage" element={<CourseManage />} />
-                    <Route path="/modules/:id/add-quiz" element={<AddQuiz />} />
-                    <Route path="/modules/:id/add-lecture" element={<AddLecture />} />
-                    <Route path="/modules/:moduleId/edit" element={<EditModule />} />
-                    <Route path="/lectures/:lectureId/edit" element={<EditLecture />} />
-                    <Route path="/quizzes/:quizId/edit" element={<EditQuiz />} />
-                    <Route path="/courses/:id/add-module" element={<AddModule />} />
-                    <Route path="/courses/create" element={<AddCourse />} />
+            <Route element={<NavbarWrapper />}>
+                <Route path="/" element={<Login />} />
+                <Route path="/register/student" element={<RegisterStudent />} />
+                <Route path="/register/teacher" element={<RegisterTeacher />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+                <Route path="/courses/:id" element={<Course />} />
+                <Route path="/courses/:id/manage" element={<CourseManage />} />
+                <Route path="/modules/:id/add-quiz" element={<AddQuiz />} />
+                <Route path="/modules/:id/add-lecture" element={<AddLecture />} />
+                <Route path="/modules/:moduleId/edit" element={<EditModule />} />
+                <Route path="/lectures/:lectureId/edit" element={<EditLecture />} />
+                <Route path="/quizzes/:quizId/edit" element={<EditQuiz />} />
+                <Route path="/courses/:id/add-module" element={<AddModule />} />
+                <Route path="/courses/create" element={<AddCourse />} />
 
 
-                    <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                    <Route path="/admin/students" element={<AdminStudentsPage />} />
-                    <Route path="/admin/students/:id" element={<StudentProfilePage />} />
-                    <Route path="/admin/teachers" element={<AdminTeachersPage />} />
-                    <Route path="/admin/feedbacks" element={<AdminFeedbacksPage />} />
-                    <Route path="/admin/courses" element={<AdminCoursePage />} />
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/students" element={<AdminStudentsPage />} />
+                <Route path="/admin/students/:id" element={<StudentProfilePage />} />
+                <Route path="/admin/teachers" element={<AdminTeachersPage />} />
+                <Route path="/admin/feedbacks" element={<AdminFeedbacksPage />} />
+                <Route path="/admin/courses" element={<AdminCoursePage />} />
 
 
-                    <Route path="/student/profile" element={<Profile />} />
-                    <Route path="/lectures/:id" element={<Lecture />} />
-                    <Route path="/quiz/:quizId/profile" element={<QuizProfile />} />
-                    <Route path="/quiz/:quizId" element={<QuizTaker />} />
-                    <Route path="/teachers/public/:teacherId" element={<PublicTeacherProfile />} />
-                    <Route path="/teachers/:teacherId" element={<TeacherProfile />} />
-                    <Route path="/courses" element={<CourseList />} />
-                    <Route path="/teachers" element={<Teachers />} />
-                    <Route path="/completed-courses" element={<CompletedCourses />} />
+                <Route path="/student/profile" element={<Profile />} />
+                <Route path="/lectures/:id" element={<Lecture />} />
+                <Route path="/quiz/:quizId/profile" element={<QuizProfile />} />
+                <Route path="/quiz/:quizId" element={<QuizTaker />} />
+                <Route path="/teachers/public/:teacherId" element={<PublicTeacherProfile />} />
+                <Route path="/teachers/:teacherId" element={<TeacherProfile />} />
+                <Route path="/courses" element={<CourseList />} />
+                <Route path="/teachers" element={<Teachers />} />
+                <Route path="/completed-courses" element={<CompletedCourses />} />
 
-                </Route>
+            </Route>
             {/*</Route>*/}
         </Routes>
     );
