@@ -27,7 +27,7 @@ const Footer = () => {
                     </Grid>
                 </Grid>
                 <Typography variant="body2" textAlign="center" style={{ marginTop: "10px" }}>
-                    © {new Date().getFullYear()} Diploma. All rights reserved.
+                    © {new Date().getFullYear()} All rights reserved.
                 </Typography>
             </Container>
         </footer>
