@@ -27,6 +27,7 @@ public class QuizMapperImpl implements QuizMapper {
         quiz.setTitle(dto.getTitle());
         quiz.setModule(module);
         quiz.setQuestions(questionMapper.toQuestionList(dto.getQuestions(),quiz));
+        quiz.setPassingScore(dto.getPassingScore());
         return quiz;
     }
 
@@ -40,6 +41,7 @@ public class QuizMapperImpl implements QuizMapper {
         quizDto.setTitle(quiz.getTitle());
         quizDto.setCourseId(quiz.getModule().getCourse().getId());
         quizDto.setModuleId(quiz.getModule().getId());
+        quizDto.setPassingScore(quiz.getPassingScore());
         quizDto.setQuestions(quiz.getQuestions() != null
             ? questionMapper.toDtoList(quiz.getQuestions())
             : List.of());

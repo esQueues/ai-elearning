@@ -18,4 +18,8 @@ public interface AuthService {
     void registerTeacher(RegisterRequest request);
 
     Map<String, String> giveRole(Authentication authentication);
+
+    void sendEmailVerificationCode(String email);
+
+    boolean verifyEmailCode(String email, String inputCode);
 }

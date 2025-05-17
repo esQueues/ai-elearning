@@ -30,6 +30,17 @@ public class AuthController {
         return ResponseEntity.ok().body(authService.login(request, response, authRequest));
     }
 
+    @PostMapping("/send-code")
+    public ResponseEntity<String> sendCode(@RequestParam String email) {
+        authService.sendEmailVerificationCode(email);
+        return ResponseEntity.ok("Код отправлен на " + email);
+    }
+
+    @PostMapping("/verify-code")
+    public boolean verifyCode(@RequestParam String email, @RequestParam String code) {
+        return authService.verifyEmailCode(email, code);
+    }
+
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public void register(@RequestBody @Valid RegisterRequest registerRequest) {

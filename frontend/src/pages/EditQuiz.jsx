@@ -7,17 +7,36 @@ const EditQuiz = () => {
     const navigate = useNavigate();
     const [quiz, setQuiz] = useState({
         title: "",
+        passingScore: "", // Initialize with empty string for UI
         questions: []
     });
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         axios.get(`/api/modules/quizzes/${quizId}`, { withCredentials: true })
-            .then(response => setQuiz(response.data))
-            .catch(error => console.error("Error fetching quiz:", error));
+            .then(response => {
+                // Ensure passingScore is set as string for input compatibility
+                setQuiz({
+                    ...response.data,
+                    passingScore: response.data.passingScore ? String(response.data.passingScore) : ""
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching quiz:", error);
+                setError("Failed to fetch quiz data.");
+            });
     }, [quizId]);
 
     const handleChange = (e) => {
-        setQuiz({ ...quiz, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        if (name === "passingScore") {
+            // Allow empty input or valid numbers (1-100)
+            if (value === "" || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 100)) {
+                setQuiz({ ...quiz, passingScore: value });
+            }
+        } else {
+            setQuiz({ ...quiz, [name]: value });
+        }
     };
 
     const handleQuestionChange = (index, e) => {
@@ -36,14 +55,61 @@ const EditQuiz = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.put(`/api/modules/quizzes/${quizId}`, quiz, { withCredentials: true })
+        setError(null);
+
+        // Validate title
+        if (!quiz.title.trim()) {
+            setError("Quiz title cannot be empty.");
+            return;
+        }
+
+        // Validate passingScore
+        const score = Number(quiz.passingScore);
+        if (!quiz.passingScore || score < 1 || score > 100) {
+            setError("Passing score must be between 1 and 100.");
+            return;
+        }
+
+        // Validate questions
+        if (quiz.questions.length === 0) {
+            setError("Quiz must have at least one question.");
+            return;
+        }
+        for (let i = 0; i < quiz.questions.length; i++) {
+            if (!quiz.questions[i].questionText.trim()) {
+                setError(`Question ${i + 1} cannot be empty.`);
+                return;
+            }
+            if (!quiz.questions[i].answers || quiz.questions[i].answers.length === 0) {
+                setError(`Question ${i + 1} must have at least one answer.`);
+                return;
+            }
+            for (let j = 0; j < quiz.questions[i].answers.length; j++) {
+                if (!quiz.questions[i].answers[j].answerText.trim()) {
+                    setError(`Answer ${j + 1} in Question ${i + 1} cannot be empty.`);
+                    return;
+                }
+            }
+        }
+
+        // Convert passingScore to number for API
+        const updatedQuiz = {
+            ...quiz,
+            passingScore: Number(quiz.passingScore)
+        };
+
+        axios.put(`/api/modules/quizzes/${quizId}`, updatedQuiz, { withCredentials: true })
             .then(() => navigate(-1))
-            .catch(error => console.error("Error updating quiz:", error));
+            .catch(error => {
+                console.error("Error updating quiz:", error);
+                setError("Failed to update quiz. Please try again.");
+            });
     };
 
     return (
         <div className="container mt-4">
             <h2>Edit Quiz</h2>
+            {error && <p className="text-danger">{error}</p>}
             <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                     <label className="form-label">Title</label>
@@ -56,7 +122,22 @@ const EditQuiz = () => {
                         required
                     />
                 </div>
-
+                <div className="mb-3">
+                    <label htmlFor="passingScore" className="form-label">Passing Score (%)</label>
+                    <input
+                        type="number"
+                        id="passingScore"
+                        className="form-control"
+                        name="passingScore"
+                        value={quiz.passingScore}
+                        onChange={handleChange}
+                        placeholder="Enter passing score (1-100)"
+                        min="1"
+                        max="100"
+                        step="1"
+                        required
+                    />
+                </div>
                 <h4>Questions</h4>
                 {quiz.questions.map((question, qIndex) => (
                     <div key={question.id} className="card mb-3 p-3">
@@ -95,7 +176,6 @@ const EditQuiz = () => {
                         ))}
                     </div>
                 ))}
-
                 <button type="submit" className="btn btn-primary">Save Changes</button>
                 <button type="button" className="btn btn-secondary ms-2" onClick={() => navigate(-1)}>Cancel</button>
             </form>

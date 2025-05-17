@@ -30,6 +30,8 @@ public class CourseController {
         return ResponseEntity.ok(courseService.findCourseById(id, auth));
     }
 
+//    @GetMapping("/certificate")
+//    public ResponseEntity
 
     @PostMapping("/{courseId}/enroll")
     public ResponseEntity<String> enrollCourse(@PathVariable("courseId") int courseId,

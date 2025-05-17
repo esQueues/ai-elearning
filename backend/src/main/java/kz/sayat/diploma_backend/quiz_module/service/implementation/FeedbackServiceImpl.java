@@ -106,43 +106,44 @@ public class FeedbackServiceImpl implements FeedbackService {
 
     private String buildPrompt(QuizAttempt quizAttempt) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("Тест әрекетінің қорытындысы:\n");
-        prompt.append("Студент: ").append(quizAttempt.getStudent().getFirstname()).append("\n");
-        prompt.append("Тест тақырыбы: ").append(quizAttempt.getQuiz().getTitle()).append("\n");
-        prompt.append("Әрекет нөмірі: ").append(quizAttempt.getAttemptNumber()).append("\n");
-        prompt.append("Ұпай: ").append(quizAttempt.getScore()).append("/100\n\n");
+        prompt.append("Quiz Attempt Summary:\n");
+        prompt.append("Student: ").append(quizAttempt.getStudent().getFirstname()).append("\n");
+        prompt.append("Quiz Topic: ").append(quizAttempt.getQuiz().getTitle()).append("\n");
+        prompt.append("Attempt Number: ").append(quizAttempt.getAttemptNumber()).append("\n");
+        prompt.append("Score: ").append(quizAttempt.getScore()).append("/100\n\n");
 
-        prompt.append("Жауаптар:\n");
+        prompt.append("Answers:\n");
 
         for (QuizAttemptAnswer attemptAnswer : quizAttempt.getAttemptAnswers()) {
             Question question = attemptAnswer.getQuestion();
 
             String correctAnswerText = question.getAnswers().stream()
-                .filter(Answer::isCorrect)
-                .map(Answer::getAnswerText)
-                .findFirst()
-                .orElse("Дұрыс жауап табылмады");
+                    .filter(Answer::isCorrect)
+                    .map(Answer::getAnswerText)
+                    .findFirst()
+                    .orElse("Correct answer not found");
 
-            prompt.append("- Сұрақ: ").append(question.getQuestionText()).append("\n");
-            prompt.append("  Студенттің жауабы: ").append(attemptAnswer.getAnswer().getAnswerText()).append("\n");
-            prompt.append("  Дұрыс жауап: ").append(correctAnswerText).append("\n");
-            prompt.append("  Нәтиже: ").append(attemptAnswer.isCorrect() ? "✅ Дұрыс" : "❌ Қате").append("\n\n");
+            prompt.append("- Question: ").append(question.getQuestionText()).append("\n");
+            prompt.append("  Student's Answer: ").append(attemptAnswer.getAnswer().getAnswerText()).append("\n");
+            prompt.append("  Correct Answer: ").append(correctAnswerText).append("\n");
+            prompt.append("  Result: ").append(attemptAnswer.isCorrect() ? "✅ Correct" : "❌ Incorrect").append("\n\n");
 
-            prompt.append("  🧐 Түсіндірме:\n");
+            prompt.append("  🧐 Explanation:\n");
 
             if (!attemptAnswer.isCorrect()) {
-                prompt.append("  ❌ Студент бұл сұраққа қате жауап берді. Қатенің себебін анықтап, егжей-тегжейлі түсіндірме жаса. Неге бұл жауап дұрыс емес? Қандай қате ойлау тәсілі немесе түсінбеушілік болуы мүмкін?\n\n");
-                prompt.append("  ✅ Дұрыс жауаптың мәнін түсіндір. Неге бұл жауап дұрыс? Қандай фактілер, логика немесе теориялық негіздер бұл жауапты растайды?\n\n");
+                prompt.append("  ❌ The student answered this question incorrectly. Analyze the mistake and provide a detailed explanation. Why is this answer incorrect? What kind of misunderstanding or faulty logic might have led to it?\n\n");
+                prompt.append("  ✅ Explain the correct answer. Why is it correct? What facts, logic, or theoretical concepts support it?\n\n");
             } else {
-                prompt.append("  ✅ Студент дұрыс жауап берді. Бірақ қосымша пайдалы ақпарат бер. Бұл сұраққа байланысты басқа қандай маңызды мәліметтер бар? Мысалы, тарихи контекст, формула, ережелер немесе нақты қолдану мысалдары.\n\n");
+                prompt.append("  ✅ The student answered correctly. Still, provide additional useful information. What other important facts are related to this question? For example, historical context, formulas, rules, or practical examples.\n\n");
             }
         }
 
-        prompt.append("📌 Соңында, студент қай тақырыптарды қайта қарауы керек екенін атап өт. Қандай білім олқылықтары байқалады?\n");
-        prompt.append("📌 Түсіндірмені нақты әрі мазмұнды етіп жаса. Қысқа жауаптардан аулақ бол.\n");
+        prompt.append("📌 Finally, highlight which topics the student should review. What knowledge gaps are evident?\n");
+        prompt.append("📌 Make the explanation clear and informative. Avoid short or vague answers.\n");
 
         return prompt.toString();
     }
+
 
 
 

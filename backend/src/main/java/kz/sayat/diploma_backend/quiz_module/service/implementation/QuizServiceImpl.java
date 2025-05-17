@@ -126,6 +126,7 @@ public class QuizServiceImpl implements QuizService {
             .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
 
         quiz.setTitle(dto.getTitle());
+        quiz.setPassingScore(dto.getPassingScore());
 
         Map<Integer, Question> existingQuestions = quiz.getQuestions().stream()
             .collect(Collectors.toMap(Question::getId, q -> q));
