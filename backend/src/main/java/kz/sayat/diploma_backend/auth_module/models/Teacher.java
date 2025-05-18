@@ -15,6 +15,7 @@ import java.util.List;
 public class Teacher extends User {
 
     private String bio;
+    private String profileImagePath;
 
     @JsonIgnore
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)

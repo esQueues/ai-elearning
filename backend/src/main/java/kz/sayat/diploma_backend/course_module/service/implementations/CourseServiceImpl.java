@@ -31,12 +31,25 @@ import kz.sayat.diploma_backend.course_module.repository.CourseRepository;
 import kz.sayat.diploma_backend.auth_module.repository.TeacherRepository;
 import kz.sayat.diploma_backend.auth_module.security.MyUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import kz.sayat.diploma_backend.course_module.models.Module;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -338,5 +351,48 @@ public class CourseServiceImpl implements CourseService {
             .collect(Collectors.toList());
     }
 
+    @Override
+    public void saveFile(int id, MultipartFile file) throws IOException {
+        Path uploadPath = Paths.get("uploads", "courses");
+
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        Path filePath = uploadPath.resolve(filename);
+
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        Course course= courseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+
+        course.setProfileImagePath(filename);
+        courseRepository.save(course);
+
+        System.out.println("Файл сохранён: " + filePath.toAbsolutePath());
+    }
+
+    @Override
+    public ResponseEntity<Resource> getProfileImageId(int id) throws IOException {
+        Course course= courseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+
+        if (course.getProfileImagePath() == null) {
+            throw new FileNotFoundException("У курса нет изображения");
+        }
+
+        Path path = Paths.get("uploads/courses").resolve(course.getProfileImagePath());
+        Resource resource = new UrlResource(path.toUri());
+
+        if (!resource.exists()) {
+            throw new FileNotFoundException("Файл не найден: " + path.toString());
+        }
+
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(Files.probeContentType(path)))
+                .body(resource);
+    }
 
 }

@@ -5,10 +5,14 @@ import kz.sayat.diploma_backend.auth_module.dto.TeacherDto;
 import kz.sayat.diploma_backend.auth_module.service.TeacherService;
 import kz.sayat.diploma_backend.course_module.dto.CourseSummaryDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.List;
 
 
@@ -56,6 +60,26 @@ public class TeacherController {
     public void changePassword(@RequestBody PasswordDto changePasswordDto,
                                Authentication authentication) {
         teacherService.changePassword(authentication, changePasswordDto);
+    }
+
+
+    @PostMapping("/profile/image")
+    public void uploadImage(
+            Authentication authentication,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        teacherService.saveFile(authentication,file);
+    }
+
+
+    @GetMapping("/profile/image")
+    public ResponseEntity<Resource> getProfileImage(Authentication authentication) throws IOException {
+        return teacherService.getProfileImage(authentication);
+    }
+
+
+    @GetMapping("/profile/image/{id}")
+    public ResponseEntity<Resource> getProfileImage(@PathVariable int id) throws IOException {
+        return teacherService.getProfileImageId(id);
     }
 
 }

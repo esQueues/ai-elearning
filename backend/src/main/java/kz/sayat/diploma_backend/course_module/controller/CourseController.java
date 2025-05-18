@@ -5,11 +5,14 @@ import kz.sayat.diploma_backend.course_module.dto.CourseDto;
 import kz.sayat.diploma_backend.course_module.dto.CourseSummaryDto;
 import kz.sayat.diploma_backend.course_module.service.CourseService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -86,5 +89,16 @@ public class CourseController {
     @PutMapping("/{id}")
     public void editCourse(@PathVariable(name = "id") int id, @RequestBody CourseDto dto) {
         courseService.editCourse(dto, id);
+    }
+
+    @PostMapping("/upload-image")
+    public void uploadImage(int id,@RequestParam("file") MultipartFile file) throws IOException {
+        courseService.saveFile(id, file);
+    }
+
+
+    @GetMapping("/profile/image/{id}")
+    public ResponseEntity<Resource> getProfileImage(@PathVariable int id) throws IOException {
+        return courseService.getProfileImageId(id);
     }
 }

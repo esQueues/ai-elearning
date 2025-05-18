@@ -23,6 +23,8 @@ public class Course {
 
     private String title;
 
+    private String profileImagePath;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 

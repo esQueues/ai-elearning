@@ -6,23 +6,48 @@ import "bootstrap/dist/css/bootstrap.min.css";
 const Course = () => {
     const { id } = useParams();
     const [course, setCourse] = useState(null);
+    const [profileImage, setProfileImage] = useState(null);
     const [loading, setLoading] = useState(true);
     const [enrolled, setEnrolled] = useState(null);
 
+    const defaultImage =
+        "https://sea-ac-ae.s3.me-south-1.amazonaws.com/wp-content/uploads/2024/06/19142849/Cover%402x.png";
+
     useEffect(() => {
+        // Fetch course details
         axios
             .get(`/api/courses/${id}`, { withCredentials: true })
             .then((response) => {
                 setCourse(response.data);
                 setEnrolled(response.data.enrolled);
             })
-            .catch((error) => {
-                console.error("Error fetching course details:", error);
+            .catch((error) => console.error("Error fetching course details:", error));
+
+        // Fetch course profile image
+        axios
+            .get(`/api/courses/profile/image/${id}`, {
+                withCredentials: true,
+                responseType: "blob",
             })
-            .finally(() => {
-                setLoading(false);
-            });
+            .then((imageResponse) => {
+                const imageUrl = URL.createObjectURL(imageResponse.data);
+                setProfileImage(imageUrl);
+            })
+            .catch((error) => {
+                console.error("Error fetching course image:", error);
+                setProfileImage(defaultImage);
+            })
+            .finally(() => setLoading(false));
     }, [id]);
+
+    // Clean up blob URL
+    useEffect(() => {
+        return () => {
+            if (profileImage && profileImage.startsWith("blob:")) {
+                URL.revokeObjectURL(profileImage);
+            }
+        };
+    }, [profileImage]);
 
     const handleEnroll = () => {
         axios
@@ -41,6 +66,15 @@ const Course = () => {
     return (
         <div className="container mt-5">
             <div className="card shadow-lg p-4 mb-4 bg-light border rounded">
+                <img
+                    src={profileImage || defaultImage}
+                    alt={course.title}
+                    className="card-img-top mb-3"
+                    style={{ height: "200px", objectFit: "cover", borderRadius: "8px" }}
+                    onError={(e) => {
+                        e.target.src = defaultImage;
+                    }}
+                />
                 <h1 className="fw-bold text-primary">{course.title}</h1>
                 <p className="text-secondary">{course.description}</p>
             </div>
@@ -48,21 +82,31 @@ const Course = () => {
             <Link to={`/teachers/public/${course.teacher?.id}`} className="text-decoration-none">
                 <div className="card shadow-sm p-3 d-flex flex-row align-items-center bg-white border rounded mb-4">
                     <img
-                        src={course.teacher?.imageUrl || "https://img.freepik.com/premium-vector/girl-holding-pencil-picture-girl-holding-book_1013341-447639.jpg?semt=ais_hybrid"}
+                        src={
+                            course.teacher?.imageUrl ||
+                            "https://img.freepik.com/premium-vector/girl-holding-pencil-picture-girl-holding-book_1013341-447639.jpg?semt=ais_hybrid"
+                        }
                         alt="Teacher"
                         className="rounded-circle me-3 border"
-                        style={{width: "90px", height: "90px", objectFit: "cover"}}
+                        style={{ width: "90px", height: "90px", objectFit: "cover" }}
                     />
                     <div>
-                        <h5 className="mb-1 text-dark">{course.teacher?.firstname} {course.teacher?.lastname}</h5>
-                        <p className="text-muted small">{course.teacher?.bio || "No bio available."}</p>
+                        <h5 className="mb-1 text-dark">
+                            {course.teacher?.firstname} {course.teacher?.lastname}
+                        </h5>
+                        <p className="text-muted small">
+                            {course.teacher?.bio || "No bio available."}
+                        </p>
                     </div>
                 </div>
             </Link>
 
             {enrolled !== null && !enrolled && (
                 <div className="text-center my-4">
-                    <button className="btn btn-success btn-lg px-5 py-2 rounded-pill" onClick={handleEnroll}>
+                    <button
+                        className="btn btn-success btn-lg px-5 py-2 rounded-pill"
+                        onClick={handleEnroll}
+                    >
                         ✅ Enroll in Course
                     </button>
                 </div>
@@ -74,15 +118,21 @@ const Course = () => {
                 ) : (
                     <div className="accordion" id="courseAccordion">
                         {course.modules.map((module, index) => {
-                            const previousPassed = index === 0 || course.modules[index - 1].quizzes.every(quiz => quiz.passed);
-                            const allQuizzesPassed = module.quizzes.every(quiz => quiz.passed);
+                            const previousPassed =
+                                index === 0 ||
+                                course.modules[index - 1].quizzes.every((quiz) => quiz.passed);
+                            const allQuizzesPassed = module.quizzes.every((quiz) => quiz.passed);
                             const isLocked = !enrolled || (!previousPassed && !allQuizzesPassed);
 
                             return (
                                 <div className="accordion-item bg-light" key={module.id}>
                                     <h2 className="accordion-header" id={`heading${index}`}>
                                         <button
-                                            className={`accordion-button fw-bold d-flex align-items-center ${isLocked ? "disabled text-muted" : "bg-white text-dark"}`}
+                                            className={`accordion-button fw-bold d-flex align-items-center ${
+                                                isLocked
+                                                    ? "disabled text-muted"
+                                                    : "bg-white text-dark"
+                                            }`}
                                             type="button"
                                             data-bs-toggle="collapse"
                                             data-bs-target={`#collapse${index}`}
@@ -99,25 +149,41 @@ const Course = () => {
                                                 </span>
                                             )}
                                             {module.progress === 100 && (
-                                                <span className="badge bg-success rounded-pill ms-3">✅</span>
+                                                <span className="badge bg-success rounded-pill ms-3">
+                                                    ✅
+                                                </span>
                                             )}
-                                            {isLocked && <span className="badge bg-secondary rounded-pill ms-3">🔒</span>}
+                                            {isLocked && (
+                                                <span className="badge bg-secondary rounded-pill ms-3">
+                                                    🔒
+                                                </span>
+                                            )}
                                         </button>
                                     </h2>
                                     <div
                                         id={`collapse${index}`}
-                                        className={`accordion-collapse collapse ${isLocked ? "d-none" : ""}`}
+                                        className={`accordion-collapse collapse ${
+                                            isLocked ? "d-none" : ""
+                                        }`}
                                         aria-labelledby={`heading${index}`}
                                         data-bs-parent="#courseAccordion"
                                     >
                                         <div className="accordion-body">
                                             {module.lectures.length > 0 && (
                                                 <div className="mb-3">
-                                                    <h5 className="fw-bold text-primary">📖 Lectures</h5>
+                                                    <h5 className="fw-bold text-primary">
+                                                        📖 Lectures
+                                                    </h5>
                                                     <ul className="list-group">
                                                         {module.lectures.map((lecture) => (
-                                                            <li key={lecture.id} className="list-group-item">
-                                                                <Link to={`/lectures/${lecture.id}`} className="text-decoration-none text-dark">
+                                                            <li
+                                                                key={lecture.id}
+                                                                className="list-group-item"
+                                                            >
+                                                                <Link
+                                                                    to={`/lectures/${lecture.id}`}
+                                                                    className="text-decoration-none text-dark"
+                                                                >
                                                                     {lecture.title}
                                                                 </Link>
                                                             </li>
@@ -128,11 +194,19 @@ const Course = () => {
 
                                             {module.quizzes.length > 0 && (
                                                 <div>
-                                                    <h5 className="fw-bold text-danger">📝 Quizzes</h5>
+                                                    <h5 className="fw-bold text-danger">
+                                                        📝 Quizzes
+                                                    </h5>
                                                     <ul className="list-group">
                                                         {module.quizzes.map((quiz) => (
-                                                            <li key={quiz.id} className="list-group-item">
-                                                                <Link to={`/quiz/${quiz.id}/profile`} className="text-decoration-none text-dark">
+                                                            <li
+                                                                key={quiz.id}
+                                                                className="list-group-item"
+                                                            >
+                                                                <Link
+                                                                    to={`/quiz/${quiz.id}/profile`}
+                                                                    className="text-decoration-none text-dark"
+                                                                >
                                                                     {quiz.title}
                                                                 </Link>
                                                             </li>
@@ -141,9 +215,12 @@ const Course = () => {
                                                 </div>
                                             )}
 
-                                            {module.lectures.length === 0 && module.quizzes.length === 0 && (
-                                                <p className="text-muted">No lectures or quizzes available.</p>
-                                            )}
+                                            {module.lectures.length === 0 &&
+                                                module.quizzes.length === 0 && (
+                                                    <p className="text-muted">
+                                                        No lectures or quizzes available.
+                                                    </p>
+                                                )}
                                         </div>
                                     </div>
                                 </div>

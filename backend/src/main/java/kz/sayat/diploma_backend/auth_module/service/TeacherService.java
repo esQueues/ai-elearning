@@ -4,8 +4,12 @@ import kz.sayat.diploma_backend.auth_module.dto.PasswordDto;
 import kz.sayat.diploma_backend.auth_module.dto.TeacherDto;
 import kz.sayat.diploma_backend.auth_module.models.Teacher;
 import kz.sayat.diploma_backend.course_module.dto.CourseSummaryDto;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface TeacherService {
@@ -27,4 +31,10 @@ public interface TeacherService {
     List<CourseSummaryDto> getCreatedCourses(Authentication authentication);
 
     void changePassword(Authentication authentication, PasswordDto changePasswordDto);
+
+    void saveFile(Authentication authentication,MultipartFile file) throws IOException;
+
+    ResponseEntity<Resource> getProfileImage(Authentication authentication) throws IOException;
+
+    ResponseEntity<Resource> getProfileImageId(int id) throws IOException;
 }

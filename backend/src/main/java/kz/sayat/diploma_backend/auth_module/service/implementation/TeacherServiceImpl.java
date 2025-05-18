@@ -15,15 +15,35 @@ import kz.sayat.diploma_backend.auth_module.models.User;
 import kz.sayat.diploma_backend.auth_module.repository.TeacherRepository;
 import kz.sayat.diploma_backend.auth_module.security.MyUserDetails;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class TeacherServiceImpl implements TeacherService {
 
     private final TeacherRepository teacherRepository;
@@ -106,4 +126,71 @@ public class TeacherServiceImpl implements TeacherService {
         teacher.setPassword(encoder.encode(changePasswordDto.getNewPassword()));
         teacherRepository.save(teacher);
     }
+
+
+    @Override
+    public void saveFile(Authentication authentication, MultipartFile file) throws IOException {
+        Path uploadPath = Paths.get("uploads", "teachers");
+
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        Path filePath = uploadPath.resolve(filename);
+
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        Teacher teacher = getTeacherFromUser(authentication);
+        teacher.setProfileImagePath(filename);
+        teacherRepository.save(teacher);
+
+        System.out.println("Файл сохранён: " + filePath.toAbsolutePath());
+    }
+
+
+    @Override
+    public ResponseEntity<Resource> getProfileImage(Authentication authentication) throws IOException {
+        Teacher teacher = getTeacherFromUser(authentication);
+
+        if (teacher.getProfileImagePath() == null) {
+            throw new FileNotFoundException("У преподавателя нет изображения");
+        }
+
+        Path path = Paths.get("uploads/teachers").resolve(teacher.getProfileImagePath());
+        Resource resource = new UrlResource(path.toUri());
+
+        if (!resource.exists()) {
+            throw new FileNotFoundException("Файл не найден: " + path.toString());
+        }
+
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(Files.probeContentType(path)))
+                .body(resource);
+    }
+
+    @Override
+    public ResponseEntity<Resource> getProfileImageId(int id) throws IOException {
+        Teacher teacher = teacherRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Teacher not found"));
+
+        if (teacher.getProfileImagePath() == null) {
+            throw new FileNotFoundException("У преподавателя нет изображения");
+        }
+
+        Path path = Paths.get("uploads/teachers").resolve(teacher.getProfileImagePath());
+        Resource resource = new UrlResource(path.toUri());
+
+        if (!resource.exists()) {
+            throw new FileNotFoundException("Файл не найден: " + path.toString());
+        }
+
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(Files.probeContentType(path)))
+                .body(resource);
+    }
+
+
 }

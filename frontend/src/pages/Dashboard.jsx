@@ -4,23 +4,68 @@ import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const Dashboard = () => {
-    const [setStudent] = useState(null);
+    const [student, setStudent] = useState(null);
     const [courses, setCourses] = useState([]);
+    const [profileImages, setProfileImages] = useState({});
     const [loading, setLoading] = useState(true);
 
+    const defaultImage =
+        "https://allea.org/wp-content/uploads/2019/06/shutterstock_520698799small.jpg";
+
     useEffect(() => {
-        axios.get("/api/student/profile", { withCredentials: true })
+        // Fetch student profile
+        axios
+            .get("/api/student/profile", { withCredentials: true })
             .then((response) => setStudent(response.data))
             .catch((error) => console.error("Error fetching student profile:", error));
 
-        axios.get("/api/courses/my-courses", { withCredentials: true })
+        // Fetch enrolled courses
+        axios
+            .get("/api/courses/my-courses", { withCredentials: true })
             .then((response) => {
                 console.log("Courses response:", response.data);
                 setCourses(response.data);
+                // Fetch profile images for each course
+                const imagePromises = response.data.map((course) =>
+                    axios
+                        .get(`/api/courses/profile/image/${course.id}`, {
+                            withCredentials: true,
+                            responseType: "blob",
+                        })
+                        .then((imageResponse) => ({
+                            id: course.id,
+                            url: URL.createObjectURL(imageResponse.data),
+                        }))
+                        .catch(() => ({
+                            id: course.id,
+                            url: defaultImage,
+                        }))
+                );
+                Promise.all(imagePromises).then((imageResults) => {
+                    const images = imageResults.reduce((acc, { id, url }) => {
+                        acc[id] = url;
+                        return acc;
+                    }, {});
+                    setProfileImages(images);
+                });
             })
-            .catch((error) => console.error("Error fetching courses:", error))
+            .catch((error) => {
+                console.error("Error fetching courses:", error);
+                setCourses([]);
+            })
             .finally(() => setLoading(false));
     }, []);
+
+    // Clean up blob URLs
+    useEffect(() => {
+        return () => {
+            Object.values(profileImages).forEach((url) => {
+                if (url.startsWith("blob:")) {
+                    URL.revokeObjectURL(url);
+                }
+            });
+        };
+    }, [profileImages]);
 
     if (loading) return <p className="text-center fs-4 fw-semibold mt-4">Loading...</p>;
 
@@ -31,7 +76,9 @@ const Dashboard = () => {
             {courses.length === 0 ? (
                 <div className="text-center">
                     <p className="text-muted">You haven't enrolled in any courses yet.</p>
-                    <Link to="/courses" className="btn btn-primary">Browse Courses</Link>
+                    <Link to="/courses" className="btn btn-primary">
+                        Browse Courses
+                    </Link>
                 </div>
             ) : (
                 <div className="row g-4 justify-content-center">
@@ -42,19 +89,26 @@ const Dashboard = () => {
                                     <div className="position-relative">
                                         {/* Course Image */}
                                         <img
-                                            src={course.imageUrl || "https://allea.org/wp-content/uploads/2019/06/shutterstock_520698799small.jpg"}
+                                            src={profileImages[course.id] || defaultImage}
                                             alt="Course Banner"
                                             className="card-img-top"
                                             style={{ height: "150px", objectFit: "cover" }}
+                                            onError={(e) => {
+                                                e.target.src = defaultImage;
+                                            }}
                                         />
                                     </div>
                                     <div className="card-body">
-                                        <h5 className="card-title text-dark fw-bold">{course.title}</h5>
+                                        <h5 className="card-title text-dark fw-bold">
+                                            {course.title}
+                                        </h5>
                                         <p className="card-text text-muted mb-2">
-                                            <i className="fas fa-user"></i> Teacher: {course.teacher?.firstname ?? "Unknown"} {course.teacher?.lastname ?? ""}
+                                            <i className="fas fa-user"></i> Teacher:{" "}
+                                            {course.teacher?.firstname ?? "Unknown"}{" "}
+                                            {course.teacher?.lastname ?? ""}
                                         </p>
 
-                                        {/* Прогресс */}
+                                        {/* Progress */}
                                         <div className="progress mt-3" style={{ height: "10px" }}>
                                             <div
                                                 className="progress-bar"
@@ -63,10 +117,11 @@ const Dashboard = () => {
                                                 aria-valuenow={course.progress}
                                                 aria-valuemin="0"
                                                 aria-valuemax="100"
-                                            >
-                                            </div>
+                                            ></div>
                                         </div>
-                                        <p className="text-center mt-1 small text-muted">{course.progress.toFixed(2)}% completed</p>
+                                        <p className="text-center mt-1 small text-muted">
+                                            {course.progress.toFixed(2)}% completed
+                                        </p>
                                     </div>
                                 </div>
                             </Link>

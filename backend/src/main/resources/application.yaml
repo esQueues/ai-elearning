@@ -1,6 +1,7 @@
 server:
   port: 8080
 
+
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
@@ -14,6 +15,7 @@ spring:
         show_sql: true
         hbm2ddl:
           auto: update
+
   mail:
     host: smtp.gmail.com
     port: 587
@@ -37,6 +39,7 @@ spring:
 gemini:
   api-key: ${GEMINI_API_KEY:}
   api-url: ${GEMINI_API_URL:}
+
 
 
 

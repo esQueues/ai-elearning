@@ -5,9 +5,13 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 const CourseList = () => {
     const [courses, setCourses] = useState([]);
+    const [profileImages, setProfileImages] = useState({});
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedQuery, setDebouncedQuery] = useState("");
+
+    const defaultImage =
+        "https://sea-ac-ae.s3.me-south-1.amazonaws.com/wp-content/uploads/2024/06/19142849/Cover%402x.png";
 
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
@@ -26,7 +30,34 @@ const CourseList = () => {
         axios
             .get(`/api/courses/get?query=${query}`, { withCredentials: true })
             .then((response) => {
-                setCourses(Array.isArray(response.data) ? response.data : []);
+                if (Array.isArray(response.data)) {
+                    setCourses(response.data);
+                    // Fetch profile images for each course
+                    const imagePromises = response.data.map((course) =>
+                        axios
+                            .get(`/api/courses/profile/image/${course.id}`, {
+                                withCredentials: true,
+                                responseType: "blob",
+                            })
+                            .then((imageResponse) => ({
+                                id: course.id,
+                                url: URL.createObjectURL(imageResponse.data),
+                            }))
+                            .catch(() => ({
+                                id: course.id,
+                                url: defaultImage,
+                            }))
+                    );
+                    Promise.all(imagePromises).then((imageResults) => {
+                        const images = imageResults.reduce((acc, { id, url }) => {
+                            acc[id] = url;
+                            return acc;
+                        }, {});
+                        setProfileImages(images);
+                    });
+                } else {
+                    setCourses([]);
+                }
             })
             .catch((error) => {
                 console.error("Error fetching courses:", error);
@@ -34,6 +65,17 @@ const CourseList = () => {
             })
             .finally(() => setLoading(false));
     };
+
+    // Clean up blob URLs
+    useEffect(() => {
+        return () => {
+            Object.values(profileImages).forEach((url) => {
+                if (url.startsWith("blob:")) {
+                    URL.revokeObjectURL(url);
+                }
+            });
+        };
+    }, [profileImages]);
 
     const handleSearch = (e) => {
         setSearchQuery(e.target.value);
@@ -57,7 +99,10 @@ const CourseList = () => {
                         value={searchQuery}
                         onChange={handleSearch}
                     />
-                    <button className="btn btn-primary fw-bold" onClick={() => fetchCourses(searchQuery)}>
+                    <button
+                        className="btn btn-primary fw-bold"
+                        onClick={() => fetchCourses(searchQuery)}
+                    >
                         🔍 Search
                     </button>
                 </div>
@@ -78,17 +123,21 @@ const CourseList = () => {
                                 >
                                     <div
                                         style={{ position: "relative" }}
-                                        onMouseOver={(e) => (e.currentTarget.querySelector(".overlay").style.opacity = 1)}
-                                        onMouseOut={(e) => (e.currentTarget.querySelector(".overlay").style.opacity = 0)}
+                                        onMouseOver={(e) =>
+                                            (e.currentTarget.querySelector(".overlay").style.opacity = 1)
+                                        }
+                                        onMouseOut={(e) =>
+                                            (e.currentTarget.querySelector(".overlay").style.opacity = 0)
+                                        }
                                     >
                                         <img
-                                            src={
-                                                course.imageUrl ||
-                                                "https://sea-ac-ae.s3.me-south-1.amazonaws.com/wp-content/uploads/2024/06/19142849/Cover%402x.png"
-                                            }
+                                            src={profileImages[course.id] || defaultImage}
                                             alt="Course Banner"
                                             className="card-img-top"
                                             style={{ height: "200px", objectFit: "cover" }}
+                                            onError={(e) => {
+                                                e.target.src = defaultImage;
+                                            }}
                                         />
                                         <div
                                             className="overlay d-flex align-items-center justify-content-center"
@@ -111,10 +160,13 @@ const CourseList = () => {
                                     <div className="card-body text-center">
                                         <h5 className="card-title text-dark fw-bold">{course.title}</h5>
                                         <p className="card-text text-muted mb-2">
-                                            <i className="fas fa-user"></i> Teacher: {course.teacher?.firstname ?? "Unknown"}{" "}
+                                            <i className="fas fa-user"></i> Teacher:{" "}
+                                            {course.teacher?.firstname ?? "Unknown"}{" "}
                                             {course.teacher?.lastname ?? ""}
                                         </p>
-                                        <button className="btn btn-outline-primary fw-bold">View Course</button>
+                                        <button className="btn btn-outline-primary fw-bold">
+                                            View Course
+                                        </button>
                                     </div>
                                 </div>
                             </Link>

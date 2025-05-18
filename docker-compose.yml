@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
@@ -33,6 +33,9 @@ services:
       - app-network
     ports:
       - "8080:8080"
+    volumes:
+      - profile_images:/app/uploads/teachers
+      - course_images:/app/uploads/courses  # New volume for course images
 
   frontend:
     build:
@@ -60,3 +63,8 @@ services:
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  postgres_data:
+  profile_images:
+  course_images:

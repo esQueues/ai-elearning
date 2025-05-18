@@ -5,14 +5,43 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 const Teachers = () => {
     const [teachers, setTeachers] = useState([]);
+    const [profileImages, setProfileImages] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const defaultImage =
+        "https://img.freepik.com/premium-vector/girl-holding-pencil-picture-girl-holding-book_1013341-447639.jpg?semt=ais_hybrid";
+
     useEffect(() => {
-        axios.get("/api/teachers")
+        // Fetch teachers list
+        axios
+            .get("/api/teachers", { withCredentials: true })
             .then((response) => {
                 if (Array.isArray(response.data)) {
                     setTeachers(response.data);
+                    // Fetch profile images for each teacher
+                    const imagePromises = response.data.map((teacher) =>
+                        axios
+                            .get(`/api/teachers/profile/image/${teacher.id}`, {
+                                withCredentials: true,
+                                responseType: "blob",
+                            })
+                            .then((imageResponse) => ({
+                                id: teacher.id,
+                                url: URL.createObjectURL(imageResponse.data),
+                            }))
+                            .catch(() => ({
+                                id: teacher.id,
+                                url: defaultImage,
+                            }))
+                    );
+                    Promise.all(imagePromises).then((imageResults) => {
+                        const images = imageResults.reduce((acc, { id, url }) => {
+                            acc[id] = url;
+                            return acc;
+                        }, {});
+                        setProfileImages(images);
+                    });
                 } else {
                     console.error("Invalid data format:", response.data);
                     setTeachers([]);
@@ -24,6 +53,17 @@ const Teachers = () => {
             })
             .finally(() => setLoading(false));
     }, []);
+
+    // Clean up blob URLs to prevent memory leaks
+    useEffect(() => {
+        return () => {
+            Object.values(profileImages).forEach((url) => {
+                if (url.startsWith("blob:")) {
+                    URL.revokeObjectURL(url);
+                }
+            });
+        };
+    }, [profileImages]);
 
     if (loading) {
         return <div className="text-center fs-4 fw-semibold mt-4">Loading...</div>;
@@ -48,14 +88,19 @@ const Teachers = () => {
                                 <div className="position-relative text-center p-3">
                                     {/* Teacher Image */}
                                     <img
-                                        src="https://img.freepik.com/premium-vector/girl-holding-pencil-picture-girl-holding-book_1013341-447639.jpg?semt=ais_hybrid"
-                                        alt="Teacher"
+                                        src={profileImages[teacher.id] || defaultImage}
+                                        alt={`${teacher.firstname} ${teacher.lastname}`}
                                         className="rounded-circle"
                                         style={{ width: "120px", height: "120px", objectFit: "cover" }}
+                                        onError={(e) => {
+                                            e.target.src = defaultImage;
+                                        }}
                                     />
                                 </div>
                                 <div className="card-body text-center">
-                                    <h5 className="card-title text-dark fw-bold">{teacher.firstname} {teacher.lastname}</h5>
+                                    <h5 className="card-title text-dark fw-bold">
+                                        {teacher.firstname} {teacher.lastname}
+                                    </h5>
                                     <p className="card-text text-muted mb-2">
                                         <i className="fas fa-envelope"></i> {teacher.email}
                                     </p>
