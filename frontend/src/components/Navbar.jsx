@@ -1,130 +1,130 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import logo from '../img/logo.png'; // Your logo is
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { AppBar, Toolbar, Typography, Box, Avatar, Menu, MenuItem, IconButton, Button } from '@mui/material';
+import { styled } from '@mui/system';
+import logo from '../img/logo.png';
+
+const NavbarContainer = styled(AppBar)(({ scrolled }) => ({
+  backgroundColor: scrolled ? '#e0e0e0' : '#ffffff', 
+  borderRadius: '0px', 
+  padding: scrolled ? '5px 15px' : '10px 20px', 
+  boxShadow: scrolled ? '0px 4px 12px rgba(0, 0, 0, 0.3)' : '0px 2px 8px rgba(0, 0, 0, 0.15)', 
+  position: 'fixed',
+  top: '0px', 
+  left: '0px', 
+  right: '0px', 
+  width: '100%', 
+  zIndex: 1100,
+  transition: 'all 0.3s ease-in-out',
+}));
+
+const LoginButton = styled(Button)({
+  borderRadius: '50px',
+  border: '2px solid #007bff',
+  color: '#007bff',
+  textTransform: 'none',
+  padding: '5px 15px',
+  fontWeight: 'bold',
+  transition: 'all 0.3s ease-in-out',
+  '&:hover': {
+    backgroundColor: '#007bff',
+    color: '#ffffff',
+  },
+});
 
 const Navbar = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [userType, setUserType] = useState(null);
+    const [student, setStudent] = useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const response = await fetch('/api/auth/check-session', {
-                    method: 'GET',
-                    credentials: 'include',
-                });
+        axios.get("/api/student/profile", { withCredentials: true })
+            .then(response => {
+                setStudent(response.data);
+                setIsAuthenticated(true);
+            })
+            .catch(() => setIsAuthenticated(false));
 
-                if (response.ok) {
-                    setIsAuthenticated(true);
-                    const userResponse = await fetch('/api/auth/user', {
-                        method: 'GET',
-                        credentials: 'include',
-                    });
-
-                    if (userResponse.ok) {
-                        const userData = await userResponse.json();
-                        setUserType(userData.role);
-                    }
-                } else {
-                    setIsAuthenticated(false);
-                }
-            } catch (error) {
-                console.error('Error checking authentication:', error);
-                setIsAuthenticated(false);
-            }
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 50); 
         };
 
-        checkAuth();
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     const handleLogout = async () => {
-        try {
-            const response = await fetch('/api/auth/logout', {
-                method: 'GET',
-                credentials: 'include',
-            });
-
-            if (response.ok) {
-                setIsAuthenticated(false);
-                setUserType(null);
-                navigate('/');
-            } else {
-                console.error('Logout failed');
-            }
-        } catch (error) {
-            console.error('Error logging out:', error);
-        }
+        await axios.put('/api/auth/logout', {}, { withCredentials: true });
+        setIsAuthenticated(false);
+        setStudent(null);
+        navigate('/');
     };
 
-    const dashboardLink = userType === "TEACHER" ? "/teacher-dashboard"
-        : userType === "ADMIN" ? "/admin-dashboard"
-            : "/dashboard";
+    const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+    const handleMenuClose = () => setAnchorEl(null);
 
-    const profileLink = userType === "TEACHER" ? "/teachers/profile" : "/student/profile";
+    const isActive = (path) => location.pathname === path;
 
     return (
-        <nav className="navbar navbar-expand-lg bg-dark text-light px-3">
-            <div className="container d-flex justify-content-between align-items-center">
-                <Link className="navbar-brand mx-auto" to={dashboardLink}>
-                    <img src={logo} alt="Logo" style={{ height: '40px' }} />
-                </Link>
+        <NavbarContainer scrolled={scrolled}>
+            <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {/* Logo +  EDUPULSE */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <IconButton onClick={() => navigate('/home')} sx={{ p: 0 }}>
+                        <img src={logo} alt="Logo" style={{ height: '40px', cursor: 'pointer' }} />
+                    </IconButton>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
+                        EDUPULSE
+                    </Typography>
+                </Box>
 
-                <button className="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span className="navbar-toggler-icon"></span>
-                </button>
+                {/* Links */}
+                <Box sx={{ display: 'flex', gap: 4, justifyContent: 'center', flexGrow: 1 }}>
+                    <Button component={Link} to="/home" variant="text" 
+                        sx={{ fontWeight: isActive("/home") ? 'bold' : 'normal', color: isActive("/home") ? "#000" : "#555", textTransform: 'none' }}>
+                        Home
+                    </Button>
+                    <Button component={Link} to="/courses" variant="text" 
+                        sx={{ fontWeight: isActive("/courses") ? 'bold' : 'normal', color: isActive("/courses") ? "#000" : "#555", textTransform: 'none' }}>
+                        Catalog
+                    </Button>
+                    <Button component={Link} to="/dashboard" variant="text" 
+                        sx={{ fontWeight: isActive("/dashboard") ? 'bold' : 'normal', color: isActive("/dashboard") ? "#000" : "#555", textTransform: 'none' }}>
+                        My Learning
+                    </Button>
+                    <Button component={Link} to="/teachers" variant="text" 
+                        sx={{ fontWeight: isActive("/teachers") ? 'bold' : 'normal', color: isActive("/teachers") ? "#000" : "#555", textTransform: 'none' }}>
+                        Teachers
+                    </Button>
+                </Box>
 
-                <div className="collapse navbar-collapse justify-content-center" id="navbarNav">
-                    <ul className="navbar-nav gap-4">
-                        <li className="nav-item">
-                            <Link className="nav-link text-white" to="/courses">Courses</Link>
-                        </li>
-                        <li className="nav-item">
-                            <Link className="nav-link text-white" to="/teachers">Teachers</Link>
-                        </li>
-                    </ul>
-                </div>
-
-                <div className="d-flex align-items-center gap-2">
-                    {isAuthenticated ? (
-                        <div className="dropdown">
-                            <button className="btn btn-secondary dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown">
-                                <i className="fas fa-user-circle fs-3"></i>
-                            </button>
-
-                            <ul className="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <Link className="dropdown-item" to={profileLink}>
-                                        <i className="fas fa-user"></i> Profile
-                                    </Link>
-                                </li>
-
-                                {userType === "STUDENT" && (
-                                    <li>
-                                        <Link className="dropdown-item" to="/completed-courses">
-                                            <i className="fas fa-trophy text-warning"></i> Завершённые курсы
-                                        </Link>
-                                    </li>
-                                )}
-                                <li><hr className="dropdown-divider" /></li>
-
-                                <li>
-                                    <button className="dropdown-item text-danger" onClick={handleLogout}>
-                                        <i className="fas fa-sign-out-alt"></i> Logout
-                                    </button>
-                                </li>
-                            </ul>
-                        </div>
-                    ) : (
-                        <Link className="btn btn-primary btn-sm ms-2" to="/">
-                            <i className="fas fa-sign-in-alt"></i> Login
-                        </Link>
-                    )}
-                </div>
-            </div>
-        </nav>
+                {/* User Profile */}
+                {isAuthenticated && student ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Typography variant="body1" sx={{ color: '#333', fontWeight: '500' }}>
+                            {student.firstname} {student.lastname}
+                        </Typography>
+                        <IconButton onClick={handleMenuOpen}>
+                            <Avatar src={student.avatar || ''} sx={{ cursor: 'pointer' }} />
+                        </IconButton>
+                        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+                            <MenuItem component={Link} to="/student/profile">Profile</MenuItem>
+                            <MenuItem component={Link} to="/completed-courses">Completed Courses</MenuItem>
+                            <MenuItem onClick={handleLogout} sx={{ color: 'red' }}>Logout</MenuItem>
+                        </Menu>
+                    </Box>
+                ) : (
+                    /* Button Log In */
+                    <LoginButton onClick={() => navigate('/')}>
+                        Sign In
+                    </LoginButton>
+                )}
+            </Toolbar>
+        </NavbarContainer>
     );
 };
 
