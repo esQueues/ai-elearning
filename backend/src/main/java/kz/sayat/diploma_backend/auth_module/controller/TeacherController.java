@@ -77,9 +77,9 @@ public class TeacherController {
     }
 
 
-    @GetMapping("/profile/image/{id}")
-    public ResponseEntity<Resource> getProfileImage(@PathVariable int id) throws IOException {
-        return teacherService.getProfileImageId(id);
-    }
+        @GetMapping("/profile/image/{id}")
+        public ResponseEntity<Resource> getProfileImage(@PathVariable int id) throws IOException {
+            return teacherService.getProfileImageId(id);
+        }
 
 }

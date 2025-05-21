@@ -7,11 +7,14 @@ const Course = () => {
     const { id } = useParams();
     const [course, setCourse] = useState(null);
     const [profileImage, setProfileImage] = useState(null);
+    const [teacherImage, setTeacherImage] = useState(null);
     const [loading, setLoading] = useState(true);
     const [enrolled, setEnrolled] = useState(null);
 
-    const defaultImage =
+    const defaultCourseImage =
         "https://sea-ac-ae.s3.me-south-1.amazonaws.com/wp-content/uploads/2024/06/19142849/Cover%402x.png";
+    const defaultTeacherImage =
+        "https://img.freepik.com/premium-vector/girl-holding-pencil-picture-girl-holding-book_1013341-447639.jpg?semt=ais_hybrid";
 
     useEffect(() => {
         // Fetch course details
@@ -20,8 +23,29 @@ const Course = () => {
             .then((response) => {
                 setCourse(response.data);
                 setEnrolled(response.data.enrolled);
+                // Fetch teacher profile image if teacher exists
+                if (response.data.teacher?.id) {
+                    axios
+                        .get(`/api/teachers/profile/image/${response.data.teacher.id}`, {
+                            withCredentials: true,
+                            responseType: "blob",
+                        })
+                        .then((imageResponse) => {
+                            const imageUrl = URL.createObjectURL(imageResponse.data);
+                            setTeacherImage(imageUrl);
+                        })
+                        .catch((error) => {
+                            console.error("Error fetching teacher image:", error);
+                            setTeacherImage(defaultTeacherImage);
+                        });
+                } else {
+                    setTeacherImage(defaultTeacherImage);
+                }
             })
-            .catch((error) => console.error("Error fetching course details:", error));
+            .catch((error) => {
+                console.error("Error fetching course details:", error);
+                setTeacherImage(defaultTeacherImage);
+            });
 
         // Fetch course profile image
         axios
@@ -35,19 +59,22 @@ const Course = () => {
             })
             .catch((error) => {
                 console.error("Error fetching course image:", error);
-                setProfileImage(defaultImage);
+                setProfileImage(defaultCourseImage);
             })
             .finally(() => setLoading(false));
     }, [id]);
 
-    // Clean up blob URL
+    // Clean up blob URLs
     useEffect(() => {
         return () => {
             if (profileImage && profileImage.startsWith("blob:")) {
                 URL.revokeObjectURL(profileImage);
             }
+            if (teacherImage && teacherImage.startsWith("blob:")) {
+                URL.revokeObjectURL(teacherImage);
+            }
         };
-    }, [profileImage]);
+    }, [profileImage, teacherImage]);
 
     const handleEnroll = () => {
         axios
@@ -67,12 +94,12 @@ const Course = () => {
         <div className="container mt-5">
             <div className="card shadow-lg p-4 mb-4 bg-light border rounded">
                 <img
-                    src={profileImage || defaultImage}
+                    src={profileImage || defaultCourseImage}
                     alt={course.title}
                     className="card-img-top mb-3"
                     style={{ height: "200px", objectFit: "cover", borderRadius: "8px" }}
                     onError={(e) => {
-                        e.target.src = defaultImage;
+                        e.target.src = defaultCourseImage;
                     }}
                 />
                 <h1 className="fw-bold text-primary">{course.title}</h1>
@@ -82,13 +109,13 @@ const Course = () => {
             <Link to={`/teachers/public/${course.teacher?.id}`} className="text-decoration-none">
                 <div className="card shadow-sm p-3 d-flex flex-row align-items-center bg-white border rounded mb-4">
                     <img
-                        src={
-                            course.teacher?.imageUrl ||
-                            "https://img.freepik.com/premium-vector/girl-holding-pencil-picture-girl-holding-book_1013341-447639.jpg?semt=ais_hybrid"
-                        }
+                        src={teacherImage || defaultTeacherImage}
                         alt="Teacher"
                         className="rounded-circle me-3 border"
                         style={{ width: "90px", height: "90px", objectFit: "cover" }}
+                        onError={(e) => {
+                            e.target.src = defaultTeacherImage;
+                        }}
                     />
                     <div>
                         <h5 className="mb-1 text-dark">
