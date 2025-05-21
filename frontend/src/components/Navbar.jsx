@@ -59,7 +59,6 @@ const Navbar = () => {
     }}>
       <Toolbar sx={{ padding: 0, minHeight: '64px', justifyContent: 'space-between' }}>
         
-        {/* ✅ Лого */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <IconButton onClick={() => navigate('/home')} sx={{ p: 0 }}>
             <img src={logo} alt="Logo" style={{ height: '40px', cursor: 'pointer' }} />
@@ -69,9 +68,7 @@ const Navbar = () => {
           </Typography>
         </Box>
 
-        {/* ✅ Профиль пользователя + бургер-меню для маленьких устройств */}
         <Box sx={{ display: { xs: 'flex', md: 'none' }, justifyContent: 'flex-end', alignItems: 'center', width: '100%', pr: 2 }}>
-        {/* ✅ Имя теперь слева, а аватар справа рядом с бургер-меню */}
         {isAuthenticated && student && (
             <IconButton onClick={handleMenuOpen} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body1" sx={{ color: '#333', fontWeight: '500' }}>
@@ -81,13 +78,11 @@ const Navbar = () => {
             </IconButton>
         )}
 
-        {/* ✅ Бургер-меню теперь строго справа */}
         <IconButton onClick={() => setIsMobileMenuOpen(true)}>
             <MenuIcon />
         </IconButton>
         </Box>
 
-        {/* ✅ Обычные кнопки (desktop) */}
         <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 4 }}>
           <Button component={Link} to="/home" sx={{ fontWeight: isActive("/home") ? 'bold' : 'normal', color: isActive("/home") ? "#000" : "#555", textTransform: 'none' }}>
             Home
@@ -103,7 +98,6 @@ const Navbar = () => {
           </Button>
         </Box>
 
-        {/* ✅ Бургер-меню (мобильная версия) */}
         <Drawer
         anchor="right"
         open={isMobileMenuOpen}
@@ -127,7 +121,6 @@ const Navbar = () => {
 
         </Drawer>
 
-        {/* ✅ Профиль пользователя на больших экранах */}
         {isAuthenticated && student ? (
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
             <Typography variant="body1" sx={{ color: '#333', fontWeight: '500' }}>
