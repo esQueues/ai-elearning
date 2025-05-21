@@ -1,4 +1,12 @@
-body {
+/* Глобальные переменные */
+:root {
+  --bs-body-bg: #F6F5FA !important; /* Принудительно заменяет Bootstrap фон */
+}
+
+/* Основные стили */
+html, body {
+  min-height: 100vh;
+  background-color: var(--bs-body-bg); /* ✅ Фон применяется на весь сайт */
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -7,8 +15,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Кодовые стили */
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
-

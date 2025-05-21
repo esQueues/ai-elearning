@@ -1,20 +1,17 @@
-
-
+/* Стили приложения */
 .App {
   text-align: center;
+  background-color: var(--bs-body-bg); /* ✅ Фон для приложения */
 }
 
+/* Логотип приложения */
 .App-logo {
   height: 40vmin;
   pointer-events: none;
+  animation: App-logo-spin infinite 20s linear; /* Анимация вращения */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
+/* Шапка приложения */
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
@@ -26,10 +23,12 @@
   color: white;
 }
 
+/* Ссылки */
 .App-link {
   color: #61dafb;
 }
 
+/* Анимация вращения логотипа */
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
@@ -38,5 +37,3 @@
     transform: rotate(360deg);
   }
 }
-
-
