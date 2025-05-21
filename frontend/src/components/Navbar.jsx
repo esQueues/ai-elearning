@@ -10,17 +10,56 @@ const Navbar = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [student, setStudent] = useState(null);
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [scrolled, setScrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const checkAuthWithRetry = async (retries = 3, delay = 1000) => {
+    setLoading(true);
+    let attempt = 0;
+
+    while (attempt < retries) {
+      try {
+        console.log(`Attempt ${attempt + 1}: Checking session...`);
+        const sessionResponse = await axios.get('/api/auth/check-session', { withCredentials: true });
+        console.log('Session check response:', sessionResponse.status);
+
+        if (sessionResponse.status === 200) {
+          const userResponse = await axios.get('/api/auth/user', { withCredentials: true });
+          const userRole = userResponse.data.role;
+          const profileEndpoint = userRole === 'TEACHER' ? '/api/teachers/profile' : '/api/student/profile';
+          const profileResponse = await axios.get(profileEndpoint, { withCredentials: true });
+
+          console.log('Role response:', userResponse.data);
+          console.log('Profile response:', profileResponse.data);
+
+          setRole(userRole);
+          setUser(profileResponse.data);
+          setIsAuthenticated(true);
+          break;
+        } else {
+          console.log('Session not valid, status:', sessionResponse.status);
+          throw new Error('Session not valid');
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error.response?.status || error.message);
+        attempt++;
+        if (attempt === retries) {
+          setIsAuthenticated(false);
+          setRole(null);
+          setUser(null);
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    axios.get("/api/student/profile", { withCredentials: true })
-      .then(response => {
-        setStudent(response.data);
-        setIsAuthenticated(true);
-      })
-      .catch(() => setIsAuthenticated(false));
+    checkAuthWithRetry();
 
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -28,19 +67,32 @@ const Navbar = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [location.pathname]); // Добавляем location.pathname как зависимость
 
   const handleLogout = async () => {
-    await axios.put('/api/auth/logout', {}, { withCredentials: true });
-    setIsAuthenticated(false);
-    setStudent(null);
-    navigate('/');
+    try {
+      await axios.put('/api/auth/logout', {}, { withCredentials: true });
+      setIsAuthenticated(false);
+      setUser(null);
+      setRole(null);
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
   const isActive = (path) => location.pathname === path;
+
+  const profileLink = role === 'TEACHER' ? '/teachers/profile' : '/student/profile';
+
+  if (loading) {
+    return <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, padding: 2 }}>
+      <Typography>Loading...</Typography>
+    </Box>;
+  }
 
   return (
     <AppBar sx={{
@@ -58,7 +110,6 @@ const Navbar = () => {
       marginBottom: '0',
     }}>
       <Toolbar sx={{ padding: 0, minHeight: '64px', justifyContent: 'space-between' }}>
-        
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <IconButton onClick={() => navigate('/home')} sx={{ p: 0 }}>
             <img src={logo} alt="Logo" style={{ height: '40px', cursor: 'pointer' }} />
@@ -69,18 +120,17 @@ const Navbar = () => {
         </Box>
 
         <Box sx={{ display: { xs: 'flex', md: 'none' }, justifyContent: 'flex-end', alignItems: 'center', width: '100%', pr: 2 }}>
-        {isAuthenticated && student && (
+          {isAuthenticated && user && (
             <IconButton onClick={handleMenuOpen} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body1" sx={{ color: '#333', fontWeight: '500' }}>
-                {student?.firstname} {student?.lastname}
-            </Typography>
-            <Avatar src={student?.avatar || '/default-avatar.png'} sx={{ cursor: 'pointer' }} />
+              <Typography variant="body1" sx={{ color: '#333', fontWeight: '500' }}>
+                {user?.firstname} {user?.lastname}
+              </Typography>
+              <Avatar src={user?.avatar || '/default-avatar.png'} sx={{ cursor: 'pointer' }} />
             </IconButton>
-        )}
-
-        <IconButton onClick={() => setIsMobileMenuOpen(true)}>
+          )}
+          <IconButton onClick={() => setIsMobileMenuOpen(true)}>
             <MenuIcon />
-        </IconButton>
+          </IconButton>
         </Box>
 
         <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 4 }}>
@@ -99,52 +149,64 @@ const Navbar = () => {
         </Box>
 
         <Drawer
-        anchor="right"
-        open={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-        sx={{
+          anchor="right"
+          open={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+          sx={{
             '& .MuiPaper-root': {
-            borderRadius: '20px 0px 0px 20px',
-            boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)',
-            width: '280px',
-            padding: '16px',
-            animation: 'slideIn 0.3s ease-in-out',
+              borderRadius: '20px 0px 0px 20px',
+              boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)',
+              width: '280px',
+              padding: '16px',
+              animation: 'slideIn 0.3s ease-in-out',
             },
-        }}
+          }}
         >
-        <List sx={{ width: 250 }}>
+          <List sx={{ width: 250 }}>
             <ListItem sx={{ color: '#222' }} button component={Link} to="/home">Home</ListItem>
             <ListItem sx={{ color: '#222' }} button component={Link} to="/courses">Catalog</ListItem>
             <ListItem sx={{ color: '#222' }} button component={Link} to="/dashboard">My Learning</ListItem>
             <ListItem sx={{ color: '#222' }} button component={Link} to="/teachers">Teachers</ListItem>
-        </List>
-
+            {isAuthenticated && user && (
+              <ListItem sx={{ color: '#222' }} button component={Link} to={profileLink}>
+                Profile
+              </ListItem>
+            )}
+          </List>
         </Drawer>
 
-        {isAuthenticated && student ? (
+        {isAuthenticated && user ? (
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
             <Typography variant="body1" sx={{ color: '#333', fontWeight: '500' }}>
-              {student.firstname} {student.lastname}
+              {user.firstname} {user.lastname}
             </Typography>
             <IconButton onClick={handleMenuOpen}>
-              <Avatar src={student.avatar || ''} sx={{ cursor: 'pointer' }} />
+              <Avatar src={user.avatar || ''} sx={{ cursor: 'pointer' }} />
             </IconButton>
             <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                sx={{
-                    '& .MuiPaper-root': {
-                    borderRadius: '12px',
-                    boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.2)',
-                    padding: '8px',
-                    animation: 'fadeIn 0.3s ease-in-out',
-                    },
-                }}
-                >
-              <MenuItem component={Link} to="/student/profile">Profile</MenuItem>
-              <MenuItem component={Link} to="/completed-courses">Completed Courses</MenuItem>
-              <MenuItem onClick={handleLogout} sx={{ color: 'red' }}>Logout</MenuItem>
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+              sx={{
+                '& .MuiPaper-root': {
+                  borderRadius: '12px',
+                  boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.2)',
+                  padding: '8px',
+                  animation: 'fadeIn 0.3s ease-in-out',
+                },
+              }}
+            >
+              <MenuItem component={Link} to={profileLink}>
+                Profile
+              </MenuItem>
+              {role === 'STUDENT' && (
+                <MenuItem component={Link} to="/completed-courses">
+                  Completed Courses
+                </MenuItem>
+              )}
+              <MenuItem onClick={handleLogout} sx={{ color: 'red' }}>
+                Logout
+              </MenuItem>
             </Menu>
           </Box>
         ) : (
