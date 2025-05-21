@@ -33,7 +33,7 @@ const Login = () => {
     };
 
     return (
-        <div className="container-fluid vh-100 d-flex align-items-center justify-content-center">
+        <div className="container-fluid d-flex align-items-center justify-content-center" style={{ minHeight: "100vh" }}>
             <div className="col-md-8 col-lg-6">
                 <div className="card shadow">
                     <div className="row g-0">

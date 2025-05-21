@@ -2,6 +2,7 @@ import {Outlet, Route, Routes} from "react-router-dom";
 import Login from "./pages/Login";
 import RegisterStudent from "./pages/RegisterStudent";
 import RegisterTeacher from "./pages/RegisterTeacher";
+import Home from "./pages/Home";
 import DashboardPage from "./pages/Dashboard";
 import Course from "./pages/Course";
 import Profile from "./pages/Profile";
@@ -61,7 +62,7 @@ const AppRoutes = () => {
                 <Route path="/admin/feedbacks" element={<AdminFeedbacksPage />} />
                 <Route path="/admin/courses" element={<AdminCoursePage />} />
 
-
+                <Route path="/home" element={<Home />} />
                 <Route path="/student/profile" element={<Profile />} />
                 <Route path="/lectures/:id" element={<Lecture />} />
                 <Route path="/quiz/:quizId/profile" element={<QuizProfile />} />

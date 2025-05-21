@@ -1,131 +1,169 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import logo from '../img/logo.png'; // Your logo is
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { AppBar, Toolbar, Typography, Box, Avatar, Menu, MenuItem, IconButton, Button, Drawer, List, ListItem } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import logo from '../img/logo.png';
 
 const Navbar = () => {
-    const navigate = useNavigate();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [userType, setUserType] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [student, setStudent] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const response = await fetch('/api/auth/check-session', {
-                    method: 'GET',
-                    credentials: 'include',
-                });
+  useEffect(() => {
+    axios.get("/api/student/profile", { withCredentials: true })
+      .then(response => {
+        setStudent(response.data);
+        setIsAuthenticated(true);
+      })
+      .catch(() => setIsAuthenticated(false));
 
-                if (response.ok) {
-                    setIsAuthenticated(true);
-                    const userResponse = await fetch('/api/auth/user', {
-                        method: 'GET',
-                        credentials: 'include',
-                    });
-
-                    if (userResponse.ok) {
-                        const userData = await userResponse.json();
-                        setUserType(userData.role);
-                    }
-                } else {
-                    setIsAuthenticated(false);
-                }
-            } catch (error) {
-                console.error('Error checking authentication:', error);
-                setIsAuthenticated(false);
-            }
-        };
-
-        checkAuth();
-    }, []);
-
-    const handleLogout = async () => {
-        try {
-            const response = await fetch('/api/auth/logout', {
-                method: 'GET',
-                credentials: 'include',
-            });
-
-            if (response.ok) {
-                setIsAuthenticated(false);
-                setUserType(null);
-                navigate('/');
-            } else {
-                console.error('Logout failed');
-            }
-        } catch (error) {
-            console.error('Error logging out:', error);
-        }
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
     };
 
-    const dashboardLink = userType === "TEACHER" ? "/teacher-dashboard"
-        : userType === "ADMIN" ? "/admin-dashboard"
-            : "/dashboard";
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-    const profileLink = userType === "TEACHER" ? "/teachers/profile" : "/student/profile";
+  const handleLogout = async () => {
+    await axios.put('/api/auth/logout', {}, { withCredentials: true });
+    setIsAuthenticated(false);
+    setStudent(null);
+    navigate('/');
+  };
 
-    return (
-        <nav className="navbar navbar-expand-lg bg-dark text-light px-3">
-            <div className="container d-flex justify-content-between align-items-center">
-                <Link className="navbar-brand mx-auto" to={dashboardLink}>
-                    <img src={logo} alt="Logo" style={{ height: '40px' }} />
-                </Link>
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
 
-                <button className="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span className="navbar-toggler-icon"></span>
-                </button>
+  const isActive = (path) => location.pathname === path;
 
-                <div className="collapse navbar-collapse justify-content-center" id="navbarNav">
-                    <ul className="navbar-nav gap-4">
-                        <li className="nav-item">
-                            <Link className="nav-link text-white" to="/courses">Courses</Link>
-                        </li>
-                        <li className="nav-item">
-                            <Link className="nav-link text-white" to="/teachers">Teachers</Link>
-                        </li>
-                    </ul>
-                </div>
+  return (
+    <AppBar sx={{
+      backgroundColor: scrolled ? '#fbfbfb' : '#ffffff',
+      borderRadius: '0px',
+      padding: scrolled ? '5px 15px' : '10px 20px',
+      boxShadow: scrolled ? '0px 4px 12px rgba(0, 0, 0, 0.3)' : '0px 2px 8px rgba(0, 0, 0, 0.15)',
+      position: 'fixed',
+      top: '0px',
+      left: '0px',
+      right: '0px',
+      width: '100%',
+      zIndex: 1100,
+      transition: 'all 0.3s ease-in-out',
+      marginBottom: '0',
+    }}>
+      <Toolbar sx={{ padding: 0, minHeight: '64px', justifyContent: 'space-between' }}>
+        
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <IconButton onClick={() => navigate('/home')} sx={{ p: 0 }}>
+            <img src={logo} alt="Logo" style={{ height: '40px', cursor: 'pointer' }} />
+          </IconButton>
+          <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
+            EDUPULSE
+          </Typography>
+        </Box>
 
-                <div className="d-flex align-items-center gap-2">
-                    {isAuthenticated ? (
-                        <div className="dropdown">
-                            <button className="btn btn-secondary dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown">
-                                <i className="fas fa-user-circle fs-3"></i>
-                            </button>
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, justifyContent: 'flex-end', alignItems: 'center', width: '100%', pr: 2 }}>
+        {isAuthenticated && student && (
+            <IconButton onClick={handleMenuOpen} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body1" sx={{ color: '#333', fontWeight: '500' }}>
+                {student?.firstname} {student?.lastname}
+            </Typography>
+            <Avatar src={student?.avatar || '/default-avatar.png'} sx={{ cursor: 'pointer' }} />
+            </IconButton>
+        )}
 
-                            <ul className="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <Link className="dropdown-item" to={profileLink}>
-                                        <i className="fas fa-user"></i> Profile
-                                    </Link>
-                                </li>
+        <IconButton onClick={() => setIsMobileMenuOpen(true)}>
+            <MenuIcon />
+        </IconButton>
+        </Box>
 
-                                {userType === "STUDENT" && (
-                                    <li>
-                                        <Link className="dropdown-item" to="/completed-courses">
-                                            <i className="fas fa-trophy text-warning"></i> Завершённые курсы
-                                        </Link>
-                                    </li>
-                                )}
-                                <li><hr className="dropdown-divider" /></li>
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 4 }}>
+          <Button component={Link} to="/home" sx={{ fontWeight: isActive("/home") ? 'bold' : 'normal', color: isActive("/home") ? "#000" : "#555", textTransform: 'none' }}>
+            Home
+          </Button>
+          <Button component={Link} to="/courses" sx={{ fontWeight: isActive("/courses") ? 'bold' : 'normal', color: isActive("/courses") ? "#000" : "#555", textTransform: 'none' }}>
+            Catalog
+          </Button>
+          <Button component={Link} to="/dashboard" sx={{ fontWeight: isActive("/dashboard") ? 'bold' : 'normal', color: isActive("/dashboard") ? "#000" : "#555", textTransform: 'none' }}>
+            My Learning
+          </Button>
+          <Button component={Link} to="/teachers" sx={{ fontWeight: isActive("/teachers") ? 'bold' : 'normal', color: isActive("/teachers") ? "#000" : "#555", textTransform: 'none' }}>
+            Teachers
+          </Button>
+        </Box>
 
-                                <li>
-                                    <button className="dropdown-item text-danger" onClick={handleLogout}>
-                                        <i className="fas fa-sign-out-alt"></i> Logout
-                                    </button>
-                                </li>
-                            </ul>
-                        </div>
-                    ) : (
-                        <Link className="btn btn-primary btn-sm ms-2" to="/">
-                            <i className="fas fa-sign-in-alt"></i> Login
-                        </Link>
-                    )}
-                </div>
-            </div>
-        </nav>
-    );
+        <Drawer
+        anchor="right"
+        open={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        sx={{
+            '& .MuiPaper-root': {
+            borderRadius: '20px 0px 0px 20px',
+            boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)',
+            width: '280px',
+            padding: '16px',
+            animation: 'slideIn 0.3s ease-in-out',
+            },
+        }}
+        >
+        <List sx={{ width: 250 }}>
+            <ListItem sx={{ color: '#222' }} button component={Link} to="/home">Home</ListItem>
+            <ListItem sx={{ color: '#222' }} button component={Link} to="/courses">Catalog</ListItem>
+            <ListItem sx={{ color: '#222' }} button component={Link} to="/dashboard">My Learning</ListItem>
+            <ListItem sx={{ color: '#222' }} button component={Link} to="/teachers">Teachers</ListItem>
+        </List>
+
+        </Drawer>
+
+        {isAuthenticated && student ? (
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
+            <Typography variant="body1" sx={{ color: '#333', fontWeight: '500' }}>
+              {student.firstname} {student.lastname}
+            </Typography>
+            <IconButton onClick={handleMenuOpen}>
+              <Avatar src={student.avatar || ''} sx={{ cursor: 'pointer' }} />
+            </IconButton>
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                sx={{
+                    '& .MuiPaper-root': {
+                    borderRadius: '12px',
+                    boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.2)',
+                    padding: '8px',
+                    animation: 'fadeIn 0.3s ease-in-out',
+                    },
+                }}
+                >
+              <MenuItem component={Link} to="/student/profile">Profile</MenuItem>
+              <MenuItem component={Link} to="/completed-courses">Completed Courses</MenuItem>
+              <MenuItem onClick={handleLogout} sx={{ color: 'red' }}>Logout</MenuItem>
+            </Menu>
+          </Box>
+        ) : (
+          <Button onClick={() => navigate('/')} sx={{
+            borderRadius: '50px',
+            border: '2px solid #007bff',
+            color: '#007bff',
+            textTransform: 'none',
+            padding: '5px 15px',
+            fontWeight: 'bold',
+            transition: 'all 0.3s ease-in-out',
+            '&:hover': { backgroundColor: '#007bff', color: '#ffffff' },
+          }}>
+            Sign In
+          </Button>
+        )}
+      </Toolbar>
+    </AppBar>
+  );
 };
 
 export default Navbar;
