@@ -6,12 +6,15 @@ import kz.sayat.diploma_backend.course_module.dto.CourseSummaryDto;
 import kz.sayat.diploma_backend.course_module.service.CourseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -33,8 +36,14 @@ public class CourseController {
         return ResponseEntity.ok(courseService.findCourseById(id, auth));
     }
 
-//    @GetMapping("/certificate")
-//    public ResponseEntity
+    @GetMapping("/certificate")
+    public ResponseEntity<byte[]> generateCertificate(@RequestParam("courseId") int courseId, Authentication authentication) {
+        ByteArrayOutputStream pdfStream = courseService.generateCertificate(courseId, authentication);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "certificate.pdf");
+        return new ResponseEntity<>(pdfStream.toByteArray(), headers, HttpStatus.OK);
+    }
 
     @PostMapping("/{courseId}/enroll")
     public ResponseEntity<String> enrollCourse(@PathVariable("courseId") int courseId,

@@ -18,6 +18,22 @@ const CompletedCoursesPage = () => {
             });
     }, []);
 
+    const downloadCertificate = (course) => {
+        axios.get(`/api/courses/certificate?courseId=${course.id}`, { responseType: "blob", withCredentials: true })
+            .then(response => {
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", `certificate_${course.id}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            })
+            .catch(() => {
+                setError("Ошибка при генерации сертификата");
+            });
+    };
+
     if (loading) return <p className="text-center mt-4">Загрузка...</p>;
     if (error) return <p className="text-danger text-center">{error}</p>;
 
@@ -41,6 +57,14 @@ const CompletedCoursesPage = () => {
                                     </span>
 
                                     <a href={`/courses/${course.id}`} className="btn btn-outline-primary w-100 mt-3">Перейти к курсу</a>
+                                    {course.progress === 100 && (
+                                        <button
+                                            className="btn btn-success w-100 mt-2"
+                                            onClick={() => downloadCertificate(course)}
+                                        >
+                                            Скачать сертификат
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>

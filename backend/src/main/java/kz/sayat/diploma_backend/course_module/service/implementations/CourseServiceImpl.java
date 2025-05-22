@@ -1,6 +1,11 @@
 package kz.sayat.diploma_backend.course_module.service.implementations;
 
 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfWriter;
 import jakarta.transaction.Transactional;
 import kz.sayat.diploma_backend.auth_module.dto.StudentDto;
 import kz.sayat.diploma_backend.auth_module.mapper.StudentMapper;
@@ -41,12 +46,14 @@ import org.springframework.stereotype.Service;
 import kz.sayat.diploma_backend.course_module.models.Module;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -393,6 +400,82 @@ public class CourseServiceImpl implements CourseService {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(Files.probeContentType(path)))
                 .body(resource);
+    }
+    @Override
+    public ByteArrayOutputStream generateCertificate(int courseId, Authentication authentication) {
+        Student student = studentRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+
+        // Verify the course is completed
+        if (!isCourseCompleted(student.getId(), course.getId())) {
+            throw new RuntimeException("Course is not completed");
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            // Create a new Document
+            Document document = new Document();
+            PdfWriter.getInstance(document, outputStream);
+            document.open();
+
+            // Fonts for styling
+            Font titleFont = new Font(Font.FontFamily.HELVETICA, 30, Font.BOLD);
+            Font subtitleFont = new Font(Font.FontFamily.HELVETICA, 20, Font.BOLD);
+            Font regularFont = new Font(Font.FontFamily.HELVETICA, 16, Font.NORMAL);
+            Font bodyFont = new Font(Font.FontFamily.HELVETICA, 12, Font.NORMAL);
+            Font congratsFont = new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD);
+            Font issuedFont = new Font(Font.FontFamily.HELVETICA, 10, Font.ITALIC);
+
+            // Title
+            Paragraph title = new Paragraph("СЕРТИФИКАТ", titleFont);
+            title.setAlignment(Paragraph.ALIGN_CENTER);
+            title.setSpacingAfter(10);
+            document.add(title);
+
+            // Subtitle
+            Paragraph subtitle = new Paragraph("О ЗАВЕРШЕНИИ КУРСА", subtitleFont);
+            subtitle.setAlignment(Paragraph.ALIGN_CENTER);
+            subtitle.setSpacingAfter(30);
+            document.add(subtitle);
+
+            // Course Details
+            Paragraph courseTitle = new Paragraph("Курс: " + course.getTitle(), regularFont);
+            courseTitle.setAlignment(Paragraph.ALIGN_CENTER);
+            document.add(courseTitle);
+
+            Paragraph studentName = new Paragraph("Участник: " + student.getFirstname() + " " + student.getLastname(), regularFont);
+            studentName.setAlignment(Paragraph.ALIGN_CENTER);
+            document.add(studentName);
+
+            Paragraph completionDate = new Paragraph("Дата завершения: " + LocalDate.now().toString(), regularFont);
+            completionDate.setAlignment(Paragraph.ALIGN_CENTER);
+            completionDate.setSpacingAfter(30);
+            document.add(completionDate);
+
+            // Body
+            Paragraph body = new Paragraph("Настоящий сертификат подтверждает, что вышеуказанный участник успешно завершил курс с оценкой 100%.", bodyFont);
+            body.setAlignment(Paragraph.ALIGN_CENTER);
+            body.setSpacingAfter(10);
+            document.add(body);
+
+            Paragraph congrats = new Paragraph("Поздравляем с успехом!", congratsFont);
+            congrats.setAlignment(Paragraph.ALIGN_CENTER);
+            congrats.setSpacingAfter(10);
+            document.add(congrats);
+
+            Paragraph issued = new Paragraph("Выдан в электронном виде", issuedFont);
+            issued.setAlignment(Paragraph.ALIGN_CENTER);
+            document.add(issued);
+
+            document.close();
+        } catch (DocumentException e) {
+            throw new RuntimeException("Error generating certificate", e);
+        }
+
+        return outputStream;
     }
 
 }
