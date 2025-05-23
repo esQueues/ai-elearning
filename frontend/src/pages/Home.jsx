@@ -85,11 +85,12 @@ const Home = () => {
         padding: '20px 0',
 
       }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
           <Box sx={{
             width: '80%',
             height: '250px',
             borderRadius: '30px',
+            margin: "20px auto",
             overflow: 'hidden',
             boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.15)',
           }}>

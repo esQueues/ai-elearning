@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { Box } from "@mui/material";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const Teachers = () => {
@@ -79,6 +80,29 @@ const Teachers = () => {
 
     return (
         <div className="container mt-4">
+            <Box
+                sx={{
+                    width: "90%", // Отступы слева и справа
+                    maxWidth: 1200,
+                    margin: "20px auto", // Центрирование и отступ сверху/снизу
+                    borderRadius: "30px", // Округленные края
+                    boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.15)", // Легкая тень
+                    overflow: "hidden",
+                }}
+            >
+                <Box
+                    component="img"
+                    src="/dashboard.png" // Замени на нужную картинку
+                    alt="Teachers Banner"
+                    sx={{
+                        width: "100%",
+                        height: "150px",
+                        objectFit: "cover",
+                        borderRadius: "20px", // Округление краев
+                    }}
+                />
+            </Box>
+
             <h1 className="text-center mb-4 fw-bold">Teachers</h1>
             <div className="row g-4 justify-content-center">
                 {teachers.map((teacher) => (
