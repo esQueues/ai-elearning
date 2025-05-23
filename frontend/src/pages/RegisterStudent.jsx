@@ -15,6 +15,9 @@ const RegisterStudent = () => {
     });
     const [errors, setErrors] = useState({});
     const [passwordMatchMessage, setPasswordMatchMessage] = useState("");
+    const [verificationCode, setVerificationCode] = useState("");
+    const [isEmailVerified, setIsEmailVerified] = useState(false);
+    const [verificationMessage, setVerificationMessage] = useState("");
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -26,10 +29,10 @@ const RegisterStudent = () => {
             if (name === "repeatPassword" || name === "password") {
                 if (newFormData.password && newFormData.repeatPassword) {
                     if (newFormData.password !== newFormData.repeatPassword) {
-                        setPasswordMatchMessage("Password do not match");
-                        setErrors(prevErrors => ({ ...prevErrors, passwordMatch: "Password do not match" }));
+                        setPasswordMatchMessage("Passwords do not match");
+                        setErrors(prevErrors => ({ ...prevErrors, passwordMatch: "Passwords do not match" }));
                     } else {
-                        setPasswordMatchMessage("Password match");
+                        setPasswordMatchMessage("Passwords match");
                         setErrors(prevErrors => ({ ...prevErrors, passwordMatch: "" }));
                     }
                 } else {
@@ -53,6 +56,8 @@ const RegisterStudent = () => {
             setErrors(prev => ({ ...prev, email: "Email must contain @" }));
         } else if (name === "email") {
             setErrors(prev => ({ ...prev, email: "" }));
+            setIsEmailVerified(false); // Reset verification status on email change
+            setVerificationMessage("");
         }
 
         if (name === "password") {
@@ -64,9 +69,60 @@ const RegisterStudent = () => {
         }
     };
 
+    const handleSendCode = async () => {
+        if (!formData.email) {
+            setErrors(prev => ({ ...prev, email: "Email is required to send verification code" }));
+            return;
+        }
+        if (!formData.email.includes("@")) {
+            setErrors(prev => ({ ...prev, email: "Email must contain @" }));
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/auth/send-code", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ email: formData.email })
+            });
+            if (response.ok) {
+                setVerificationMessage("Verification code sent to " + formData.email);
+            } else {
+                const errorData = await response.json();
+                setVerificationMessage(errorData.message || "Failed to send verification code.");
+            }
+        } catch (error) {
+            setVerificationMessage("Error sending verification code.");
+        }
+    };
+
+    const handleVerifyCode = async () => {
+        if (!verificationCode) {
+            setVerificationMessage("Please enter the verification code.");
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/auth/verify-code", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ email: formData.email, code: verificationCode })
+            });
+            const isVerified = await response.json();
+            if (isVerified) {
+                setIsEmailVerified(true);
+                setVerificationMessage("Email verified successfully!");
+            } else {
+                setIsEmailVerified(false);
+                setVerificationMessage("Invalid verification code.");
+            }
+        } catch (error) {
+            setVerificationMessage("Error verifying code.");
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-
 
         const validationErrors = {};
 
@@ -83,35 +139,39 @@ const RegisterStudent = () => {
         if (!formData.password) validationErrors.password = "Password is required";
         if (formData.password.length < 6) validationErrors.password = "Password must be at least 6 characters";
         if (formData.password !== formData.repeatPassword) {
-            validationErrors.passwordMatch = "Password do not match";
+            validationErrors.passwordMatch = "Passwords do not match";
         }
+        if (!isEmailVerified) validationErrors.email = "Please verify your email before registering";
 
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
         }
 
+        try {
+            const response = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: formData.email,
+                    password: formData.password,
+                    firstname: formData.firstname,
+                    lastname: formData.lastname,
+                    birthDate: formData.birthDate,
+                    gradeLevel: formData.gradeLevel,
+                    schoolInfo: formData.schoolInfo
+                }),
+            });
 
-        const response = await fetch("/api/auth/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                email: formData.email,
-                password: formData.password,
-                firstname: formData.firstname,
-                lastname: formData.lastname,
-                birthDate: formData.birthDate,
-                gradeLevel: formData.gradeLevel,
-                schoolInfo: formData.schoolInfo
-            }),
-        });
-
-        if (response.ok) {
-            alert("Student registered successfully!");
-            navigate("/");
-        } else {
-            const errorData = await response.json();
-            alert(errorData.message || "Student registration failed.");
+            if (response.ok) {
+                alert("Student registered successfully!");
+                navigate("/");
+            } else {
+                const errorData = await response.json();
+                alert(errorData.message || "Student registration failed.");
+            }
+        } catch (error) {
+            alert("Error during registration.");
         }
     };
 
@@ -119,12 +179,12 @@ const RegisterStudent = () => {
         <div className="container-fluid min-vh-80 d-flex align-items-center justify-content-center">
             <div className="card shadow-lg" style={{ width: "95%", maxWidth: "750px", padding: "2rem" }}>
                 <div className="row g-0">
-                    {/* Левая часть - Логотип */}
+                    {/* Left side - Logo */}
                     <div className="col-md-5 d-flex align-items-center justify-content-center">
                         <img src={logo} alt="Logo" className="img-fluid" style={{ width: "80%", maxWidth: "250px" }} />
                     </div>
 
-                    {/* Правая часть - Форма регистрации */}
+                    {/* Right side - Registration form */}
                     <div className="col-md-7">
                         <div className="card-body d-flex flex-column align-items-center">
                             <h2 className="card-title text-center mb-1">Register as a Student</h2>
@@ -202,16 +262,56 @@ const RegisterStudent = () => {
 
                                 <div className="mb-3">
                                     <label htmlFor="email" className="form-label">Email *</label>
-                                    <input
-                                        type="email"
-                                        className={`form-control ${errors.email ? "is-invalid" : ""}`}
-                                        id="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                    />
+                                    <div className="input-group">
+                                        <input
+                                            type="email"
+                                            className={`form-control ${errors.email ? "is-invalid" : ""}`}
+                                            id="email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            disabled={isEmailVerified}
+                                        />
+                                        {!isEmailVerified && (
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-secondary"
+                                                onClick={handleSendCode}
+                                                disabled={!formData.email || errors.email}
+                                            >
+                                                Send Code
+                                            </button>
+                                        )}
+                                    </div>
                                     {errors.email && <div className="invalid-feedback">{errors.email}</div>}
                                 </div>
+
+                                {!isEmailVerified && formData.email && (
+                                    <div className="mb-3">
+                                        <label htmlFor="verificationCode" className="form-label">Verification Code *</label>
+                                        <div className="input-group">
+                                            <input
+                                                type="text"
+                                                className={`form-control ${verificationMessage.includes("Invalid") ? "is-invalid" : ""}`}
+                                                id="verificationCode"
+                                                value={verificationCode}
+                                                onChange={(e) => setVerificationCode(e.target.value)}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-secondary"
+                                                onClick={handleVerifyCode}
+                                            >
+                                                Verify
+                                            </button>
+                                        </div>
+                                        {verificationMessage && (
+                                            <div className={isEmailVerified ? "text-success" : "text-danger"}>
+                                                {verificationMessage}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div className="mb-3">
                                     <label htmlFor="password" className="form-label">Password *</label>
@@ -240,9 +340,18 @@ const RegisterStudent = () => {
                                         onChange={handleChange}
                                     />
                                     {errors.passwordMatch && <div className="invalid-feedback">{errors.passwordMatch}</div>}
+                                    {passwordMatchMessage && (
+                                        <div className={passwordMatchMessage === "Passwords match" ? "text-success" : "text-danger"}>
+                                            {passwordMatchMessage}
+                                        </div>
+                                    )}
                                 </div>
 
-                                <button type="submit" className="btn btn-primary w-100 mt-3">
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary w-100 mt-3"
+                                    disabled={!isEmailVerified}
+                                >
                                     Register as a Student
                                 </button>
                             </form>
