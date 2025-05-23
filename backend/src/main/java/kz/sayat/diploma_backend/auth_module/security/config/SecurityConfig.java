@@ -42,10 +42,10 @@ public class SecurityConfig {
             }))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(requests -> requests
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Разрешаем preflight-запросы
-                .requestMatchers("/api/auth/register/**", "/api/auth/login").permitAll()
-                .requestMatchers( "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-//                .requestMatchers("/api/teachers","/api/courses").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    .requestMatchers("/api/auth/send-code", "/api/auth/verify-code", "/api/auth/register/**", "/api/auth/login", "/api/auth/check-session").permitAll()
+                    .requestMatchers( "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/api/teachers","/api/courses/all").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session ->

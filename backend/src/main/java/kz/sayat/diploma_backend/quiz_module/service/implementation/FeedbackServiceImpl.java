@@ -42,14 +42,18 @@ public class FeedbackServiceImpl implements FeedbackService {
     @Override
     public String generateFeedback(int attemptId) {
         QuizAttempt quizAttempt = quizAttemptRepository.findById(attemptId)
-            .orElseThrow(() -> new ResourceNotFoundException("quiz attempt not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("quiz attempt not found"));
 
-        String promptText = buildPrompt(quizAttempt);
+        int passingScore = quizAttempt.getQuiz().getPassingScore();
+        boolean isPassed = quizAttempt.getScore() >= passingScore;
+
+        String promptText = buildPrompt(quizAttempt, isPassed);
         String feedbackText = getFeedback(promptText);
 
         feedbackRepository.save(new Feedback(promptText, feedbackText, quizAttempt));
         return feedbackText;
     }
+
 
     @Override
     public String getFeedbackOfStudent(int attemptId, Authentication authentication) {
@@ -104,7 +108,7 @@ public class FeedbackServiceImpl implements FeedbackService {
         feedbackRepository.deleteById(id);
     }
 
-    private String buildPrompt(QuizAttempt quizAttempt) {
+    private String buildPrompt(QuizAttempt quizAttempt, boolean isPassed) {
         StringBuilder prompt = new StringBuilder();
         prompt.append("Quiz Attempt Summary:\n");
         prompt.append("Student: ").append(quizAttempt.getStudent().getFirstname()).append("\n");
@@ -116,33 +120,51 @@ public class FeedbackServiceImpl implements FeedbackService {
 
         for (QuizAttemptAnswer attemptAnswer : quizAttempt.getAttemptAnswers()) {
             Question question = attemptAnswer.getQuestion();
-
-            String correctAnswerText = question.getAnswers().stream()
-                    .filter(Answer::isCorrect)
-                    .map(Answer::getAnswerText)
-                    .findFirst()
-                    .orElse("Correct answer not found");
+            String studentAnswer = attemptAnswer.getAnswer().getAnswerText();
 
             prompt.append("- Question: ").append(question.getQuestionText()).append("\n");
-            prompt.append("  Student's Answer: ").append(attemptAnswer.getAnswer().getAnswerText()).append("\n");
-            prompt.append("  Correct Answer: ").append(correctAnswerText).append("\n");
+            prompt.append("  Student's Answer: ").append(studentAnswer).append("\n");
+
+            if (isPassed) {
+                String correctAnswerText = question.getAnswers().stream()
+                        .filter(Answer::isCorrect)
+                        .map(Answer::getAnswerText)
+                        .findFirst()
+                        .orElse("Correct answer not found");
+
+                prompt.append("  Correct Answer: ").append(correctAnswerText).append("\n");
+            } else {
+                prompt.append("  Correct Answer: 🔒 Hidden (will be available after passing the quiz)\n");
+            }
+
             prompt.append("  Result: ").append(attemptAnswer.isCorrect() ? "✅ Correct" : "❌ Incorrect").append("\n\n");
 
             prompt.append("  🧐 Explanation:\n");
 
             if (!attemptAnswer.isCorrect()) {
-                prompt.append("  ❌ The student answered this question incorrectly. Analyze the mistake and provide a detailed explanation. Why is this answer incorrect? What kind of misunderstanding or faulty logic might have led to it?\n\n");
-                prompt.append("  ✅ Explain the correct answer. Why is it correct? What facts, logic, or theoretical concepts support it?\n\n");
+                if (isPassed) {
+                    prompt.append("  ❌ The student answered this question incorrectly. Analyze the mistake and explain why the chosen answer is wrong.\n\n");
+                    prompt.append("  ✅ Explain the correct answer. What facts or logic support it?\n\n");
+                } else {
+                    prompt.append("  ❌ The student answered incorrectly. Suggest what concepts they might have misunderstood and what topics they should revisit. Do not mention the correct answer directly.\n\n");
+                }
             } else {
-                prompt.append("  ✅ The student answered correctly. Still, provide additional useful information. What other important facts are related to this question? For example, historical context, formulas, rules, or practical examples.\n\n");
+                prompt.append("  ✅ The student answered correctly. Provide additional insight or context to deepen understanding.\n\n");
             }
         }
 
+        prompt.append("📌  Advice:\n");
+        prompt.append("Based on the overall performance, highlight which topics the student should review. Do not reveal answers directly unless the quiz was passed.\n");
+
         prompt.append("📌 Finally, highlight which topics the student should review. What knowledge gaps are evident?\n");
-        prompt.append("📌 Make the explanation clear and informative. Avoid short or vague answers.\n");
+        prompt.append("📌 Make the explanation clear and informative. Avoid short or vague answers.\n\n");
+
+        prompt.append("📚 Based on the student's incorrect answers, suggest 2–4 key topics they should study to improve their understanding. ");
+        prompt.append("Use patterns in their mistakes to recommend specific subject areas or concepts.\n");
 
         return prompt.toString();
     }
+
 
 
 
