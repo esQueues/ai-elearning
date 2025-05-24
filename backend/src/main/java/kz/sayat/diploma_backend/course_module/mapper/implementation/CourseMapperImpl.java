@@ -70,6 +70,7 @@ public class CourseMapperImpl implements CourseMapper {
         CourseSummaryDto courseSummaryDto = new CourseSummaryDto();
         courseSummaryDto.setId(course.getId());
         courseSummaryDto.setTitle(course.getTitle());
+        courseSummaryDto.setDescription(course.getDescription());
         courseSummaryDto.setTeacher(teacherMapper.toTeacherDtoWithoutCourses(course.getTeacher()));
         courseSummaryDto.setPublic(course.isPublic());
 

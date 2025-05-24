@@ -246,7 +246,6 @@ const CourseList = () => {
                                 </div>
                                 <div className="card-body text-start">
                                     <h5 className="card-title course-title fw-bold">{course.title}</h5> 
-                                    <p className="text-muted small mb-2">{course.title}</p>
                                     <p className="text-muted small mb-2"
                                         style={{
                                             display: "-webkit-box",

@@ -175,7 +175,6 @@ const Dashboard = () => {
 
                     <div className="flex-grow-1 px-4 py-3">
                         <h5 className="fw-bold course-title">{course.title}</h5>  
-                        <p className="text-muted small mb-2">{course.title}</p>  
                         <p className="text-muted small mb-2"
                             style={{
                                 display: "-webkit-box",
