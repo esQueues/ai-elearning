@@ -263,7 +263,7 @@ const CourseList = () => {
                                         <img 
                                             src={teacherImages[course.teacher.id] || defaultImage} 
                                             alt="Teacher Avatar"
-                                            className="rounded-circle border shadow-sm"  
+                                            className="rounded-circle border"  
                                             style={{ width: "35px", height: "35px", objectFit: "cover", marginRight: "10px" }} 
                                             onError={(e) => { e.target.src = defaultImage; }}
                                         />
