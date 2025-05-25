@@ -106,7 +106,7 @@ const Teachers = () => {
 
             <h2 className="text-center fw-semibold mt-5 mb-5" style={{ color: "#333", fontSize: "28px" }}> Teachers </h2>
 
-            <div className="row g-4 justify-content-center">
+            <div className="row g-4 justify-content-center mb-4">
                 {teachers.map((teacher) => (
                     <div key={teacher.id} className="col-lg-4 col-md-6 col-sm-12">
                         <Link to={`/teachers/public/${teacher.id}`} className="text-decoration-none">

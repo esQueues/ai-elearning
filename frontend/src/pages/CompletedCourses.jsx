@@ -13,7 +13,7 @@ const CompletedCoursesPage = () => {
                 setLoading(false);
             })
             .catch(() => {
-                setError("Ошибка загрузки завершённых курсов");
+                setError("Error loading completed courses");
                 setLoading(false);
             });
     }, []);
@@ -30,39 +30,54 @@ const CompletedCoursesPage = () => {
                 document.body.removeChild(link);
             })
             .catch(() => {
-                setError("Ошибка при генерации сертификата");
+                setError("Error generating the certificate");
             });
     };
 
-    if (loading) return <p className="text-center mt-4">Загрузка...</p>;
+    if (loading) return <p className="text-center mt-4">Loading...</p>;
     if (error) return <p className="text-danger text-center">{error}</p>;
 
     return (
         <div className="container mt-4">
-            <h1 className="mb-4 text-center">🏆 Завершённые курсы</h1>
+            <h1 className="mb-4 text-center">🏆 Completed courses</h1>
             {courses.length === 0 ? (
-                <p className="text-center">У вас пока нет завершённых курсов.</p>
+                <p className="text-center">You don't have any completed courses yet.</p>
             ) : (
                 <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                     {courses.map(course => (
                         <div key={course.id} className="col">
-                            <div className="card h-100 shadow-sm border-primary">
+                            {/* 🔹 Контейнер курса (обновлен стиль) */}
+                            <div className="card h-100 shadow-sm rounded-4"
+                                style={{
+                                    border: "1px solid #ccc",  // ✅ Тонкая светло-серая граница
+                                    borderRadius: "20px",  // ✅ Мягкие углы
+                                    transition: "0.3s ease",
+                                    backgroundColor: "white"
+                                }}
+                                onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#E8F5E9"; }}
+                                onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "white"; }}
+                            >
                                 <div className="card-body position-relative">
-                                    <h5 className="card-title">{course.title}</h5>
+                                    <h5 className="card-title fw-bold text-center">{course.title}</h5>
                                     <p className="card-text text-muted">{course.description}</p>
 
-                                    {/* Бейдж с процентом */}
+                                    {/* 🔹 Бейдж с процентом */}
                                     <span className={`badge ${course.progress === 100 ? "bg-warning text-dark" : "bg-primary"} position-absolute top-0 start-50 translate-middle`}>
-                                        {course.progress === 100 ? "🏅 100% Оценка" : `${course.progress}% Оценка`}
+                                        {course.progress === 100 ? "🏅 100% score" : `${course.progress}% Оценка`}
                                     </span>
 
-                                    <a href={`/courses/${course.id}`} className="btn btn-outline-primary w-100 mt-3">Перейти к курсу</a>
+                                    {/* 🔹 Кнопки (обновлен стиль) */}
+                                    <a href={`/courses/${course.id}`} className="btn w-100 mt-3 rounded-pill"
+                                       style={{ border: "2px solid #8BC34A", color: "#8BC34A", backgroundColor: "transparent", transition: "0.3s ease" }}>
+                                        Go to the course
+                                    </a>
                                     {course.progress === 100 && (
                                         <button
-                                            className="btn btn-success w-100 mt-2"
+                                            className="btn w-100 mt-2 rounded-pill text-white"
+                                            style={{ backgroundColor: "#8BC34A", transition: "0.3s ease" }}
                                             onClick={() => downloadCertificate(course)}
                                         >
-                                            Скачать сертификат
+                                            Download the certificate
                                         </button>
                                     )}
                                 </div>

@@ -116,7 +116,6 @@ const Course = () => {
 
                 <div className="flex-grow-1 px-4">
                     <h2 className="fw-bold">{course.title}</h2>  
-                    <p className="text-muted small mb-2">{course.title}</p> 
                     <p className="text-secondary"
                         style={{
                             display: "-webkit-box",

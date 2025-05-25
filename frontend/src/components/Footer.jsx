@@ -1,39 +1,58 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { Container, Grid, Typography } from "@mui/material";
+import { Container, Grid, Typography, Box, Divider, IconButton, Link } from "@mui/material";
+import { Facebook, Twitter, Instagram, LinkedIn } from "@mui/icons-material";
 
 const Footer = () => {
     return (
-        <footer style={{ background: "#212121", color: "#fff", padding: "20px 0" }}>
+        <Box sx={{ backgroundColor: "#333", color: "#fff", py: 4, mt: 5 }}>
             <Container maxWidth="lg">
-                <Grid container spacing={3} justifyContent="center">
-                    <Grid item xs={12} sm={4} textAlign="center">
-                        <Typography variant="h6">E-learning</Typography>
-                        <Typography variant="body2">Enhancing education with AI-powered feedback</Typography>
+                {/* 🔹 Верхняя часть футера */}
+                <Grid container spacing={3} alignItems="center" justifyContent="space-between">
+                    {/* 🔹 Название платформы слева */}
+                    <Grid item xs={12} sm={6} textAlign="left">
+                        <Box display="flex" alignItems="center" gap={1}>
+                            <Box component="img" src="/logo2.png" alt="OZAT Logo" sx={{ height: 40 }} />
+                            <Typography variant="h5" fontWeight="bold">OZAT</Typography>
+                        </Box>
                     </Grid>
-                    <Grid item xs={12} sm={4} textAlign="center">
-                        <Typography variant="h6">Quick Links</Typography>
-                        <Link to="/about" style={linkStyle}>About</Link> |
-                        <Link to="/courses" style={linkStyle}>Courses</Link> |
-                        <Link to="/contact" style={linkStyle}>Contact</Link>
-                    </Grid>
-                    <Grid item xs={12} sm={4} textAlign="center">
-                        <Typography variant="h6">Follow Us</Typography>
-                        <Typography variant="body2">
-                            <a href="#" style={linkStyle}>Facebook</a> |
-                            <a href="#" style={linkStyle}>Twitter</a> |
-                            <a href="#" style={linkStyle}>LinkedIn</a>
-                        </Typography>
+
+                    {/* 🔹 Четыре ссылки справа */}
+                    <Grid item xs={12} sm={6} textAlign="right">
+                        <Box display="flex" justifyContent="flex-end" gap={6}>
+                            <Link href="/home" sx={linkStyle}>Home</Link>
+                            <Link href="/courses" sx={linkStyle}>Catalog</Link>
+                            <Link href="/teachers" sx={linkStyle}>Teachers</Link>
+                            <Link href="#" sx={linkStyle}>Contact Us</Link>
+                        </Box>
                     </Grid>
                 </Grid>
-                <Typography variant="body2" textAlign="center" style={{ marginTop: "10px" }}>
-                    © {new Date().getFullYear()} All rights reserved.
-                </Typography>
+
+                {/* 🔹 Горизонтальная линия */}
+                <Divider sx={{ my: 3, backgroundColor: "#777" }} />
+
+                {/* 🔹 Нижняя часть футера */}
+                <Grid container spacing={3} alignItems="center" justifyContent="space-between">
+                    {/* 🔹 Авторские права слева */}
+                    <Grid item xs={12} sm={6} textAlign="left">
+                        <Typography variant="body2">© 2025 OZAT. All rights reserved.</Typography>
+                    </Grid>
+
+                    {/* 🔹 Соцсети справа */}
+                    <Grid item xs={12} sm={6} textAlign="right">
+                        <Box display="flex" justifyContent="flex-end" gap={2}>
+                            <IconButton sx={iconStyle}><Facebook /></IconButton>
+                            <IconButton sx={iconStyle}><Twitter /></IconButton>
+                            <IconButton sx={iconStyle}><Instagram /></IconButton>
+                            <IconButton sx={iconStyle}><LinkedIn /></IconButton>
+                        </Box>
+                    </Grid>
+                </Grid>
             </Container>
-        </footer>
+        </Box>
     );
 };
 
-const linkStyle = { color: "#fff", textDecoration: "none", margin: "0 5px" };
+const linkStyle = { color: "#fff", textDecoration: "none", fontSize: "14px" };
+const iconStyle = { color: "#fff", "&:hover": { color: "#8BC34A" } };
 
 export default Footer;
