@@ -30,7 +30,7 @@ public interface CourseService {
 
     List<StudentDto> getStudentForCourse(int id);
 
-    List<CourseSummaryDto> getCourses(String search);
+    List<CourseSummaryDto> getCoursesByQuery(String query);
 
     void approve(int id);
 
@@ -47,4 +47,6 @@ public interface CourseService {
     ResponseEntity<Resource> getProfileImageId(int id) throws IOException;
 
     ByteArrayOutputStream generateCertificate(int courseId, Authentication authentication);
+
+    List<CourseSummaryDto> getCoursesByCategory(List<String> tags);
 }

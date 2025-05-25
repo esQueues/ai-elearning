@@ -19,6 +19,7 @@ import kz.sayat.diploma_backend.course_module.dto.ModuleDto;
 import kz.sayat.diploma_backend.course_module.dto.QuizSummaryDto;
 import kz.sayat.diploma_backend.course_module.models.Enrollment;
 import kz.sayat.diploma_backend.course_module.models.EnrollmentId;
+import kz.sayat.diploma_backend.course_module.models.enums.CourseCategory;
 import kz.sayat.diploma_backend.course_module.repository.EnrollmentRepository;
 import kz.sayat.diploma_backend.course_module.repository.ModuleRepository;
 import kz.sayat.diploma_backend.course_module.service.CourseService;
@@ -54,10 +55,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.util.*;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -296,14 +297,44 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<CourseSummaryDto> getCourses(String search) {
-        if (search != null && !search.isEmpty()) {
-            List<Course> courses=courseRepository.findByTitleContainingIgnoreCaseAndIsPublicTrue(search);
-            return courseMapper.toCourseSummaryDtoList(courses);
+    public List<CourseSummaryDto> getCoursesByQuery(String query) {
+        List<Course> courses;
+        if (query == null || query.trim().isEmpty()) {
+            courses = courseRepository.findByIsPublicTrue();
+        } else {
+            courses = courseRepository.findByIsPublicTrueAndTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(query, query);
         }
-        List<Course> courses=courseRepository.findByIsPublicTrue();
         return courseMapper.toCourseSummaryDtoList(courses);
     }
+
+    @Override
+    public List<CourseSummaryDto> getCoursesByCategory(List<String> selectedCategoryNames) {
+        if (selectedCategoryNames == null || selectedCategoryNames.isEmpty()) {
+            throw new IllegalArgumentException("At least one category name must be provided");
+        }
+
+        Set<String> tags = selectedCategoryNames.stream()
+                .map(name -> {
+                    try {
+                        return CourseCategory.valueOf(name);
+                    } catch (IllegalArgumentException e) {
+                        throw new IllegalArgumentException("Invalid category name: " + name);
+                    }
+                })
+                .flatMap(category -> category.getTags().stream())
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+
+        Set<Course> matchingCourses = new HashSet<>();
+        for (String tag : tags) {
+            List<Course> courses = courseRepository
+                    .findByIsPublicTrueAndTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(tag, tag);
+            matchingCourses.addAll(courses);
+        }
+
+        return courseMapper.toCourseSummaryDtoList(new ArrayList<>(matchingCourses));
+    }
+
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")

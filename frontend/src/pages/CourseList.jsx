@@ -10,10 +10,17 @@ const CourseList = () => {
     const [teacherImages, setTeacherImages] = useState({});
     const [loading, setLoading] = useState(true);
     const [selectedFilters, setSelectedFilters] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedQuery, setDebouncedQuery] = useState("");
 
     const defaultImage = "https://sea-ac-ae.s3.me-south-1.amazonaws.com/wp-content/uploads/2024/06/19142849/Cover%402x.png";
+
+    useEffect(() => {
+        // Fetch categories and all courses on component mount
+        fetchCategories();
+        fetchCourses("", []); // Initial fetch for all courses
+    }, []);
 
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
@@ -23,8 +30,111 @@ const CourseList = () => {
     }, [searchQuery]);
 
     useEffect(() => {
-        fetchCourses(debouncedQuery);
-    }, [debouncedQuery]);
+        // Fetch courses when search query or filters change
+        fetchCourses(debouncedQuery, selectedFilters);
+    }, [debouncedQuery, selectedFilters]);
+
+    const fetchCategories = () => {
+        axios.get("/api/courses/categories", { withCredentials: true })
+            .then((response) => {
+                if (Array.isArray(response.data)) {
+                    setCategories(response.data);
+                } else {
+                    setCategories([]);
+                }
+            })
+            .catch((error) => {
+                console.error("Error fetching categories:", error);
+                setCategories([]);
+            });
+    };
+
+    const fetchCourses = (query, categories = []) => {
+        setLoading(true);
+        // Construct URL based on categories and query
+        let url;
+        if (categories.length > 0) {
+            url = `/api/courses/search/categories?${categories.map(cat => `categories=${encodeURIComponent(cat)}`).join('&')}${query ? `&query=${encodeURIComponent(query)}` : ''}`;
+        } else {
+            url = query ? `/api/courses/get?query=${encodeURIComponent(query)}` : `/api/courses/get`;
+        }
+
+        axios.get(url, { withCredentials: true })
+            .then((response) => {
+                if (Array.isArray(response.data)) {
+                    setCourses(response.data);
+                    const imagePromises = response.data.map((course) =>
+                        axios.get(`/api/courses/profile/image/${course.id}`, {
+                            withCredentials: true,
+                            responseType: "blob",
+                        })
+                            .then((imageResponse) => ({
+                                id: course.id,
+                                url: URL.createObjectURL(imageResponse.data),
+                            }))
+                            .catch(() => ({
+                                id: course.id,
+                                url: defaultImage,
+                            }))
+                    );
+                    Promise.all(imagePromises).then((imageResults) => {
+                        const images = imageResults.reduce((acc, { id, url }) => {
+                            acc[id] = url;
+                            return acc;
+                        }, {});
+                        setProfileImages(images);
+                    });
+                } else {
+                    setCourses([]);
+                }
+            })
+            .catch((error) => {
+                console.error("Error fetching courses:", error);
+                // Fallback to /api/courses/get without query if the error is due to missing query parameter
+                if (error.response?.status === 400 && !query && categories.length === 0) {
+                    axios.get("/api/courses/get", { withCredentials: true })
+                        .then((response) => {
+                            if (Array.isArray(response.data)) {
+                                setCourses(response.data);
+                                const imagePromises = response.data.map((course) =>
+                                    axios.get(`/api/courses/profile/image/${course.id}`, {
+                                        withCredentials: true,
+                                        responseType: "blob",
+                                    })
+                                        .then((imageResponse) => ({
+                                            id: course.id,
+                                            url: URL.createObjectURL(imageResponse.data),
+                                        }))
+                                        .catch(() => ({
+                                            id: course.id,
+                                            url: defaultImage,
+                                        }))
+                                );
+                                Promise.all(imagePromises).then((imageResults) => {
+                                    const images = imageResults.reduce((acc, { id, url }) => {
+                                        acc[id] = url;
+                                        return acc;
+                                    }, {});
+                                    setProfileImages(images);
+                                });
+                            } else {
+                                setCourses([]);
+                            }
+                        })
+                        .catch((fallbackError) => {
+                            console.error("Error in fallback fetch:", fallbackError);
+                            setCourses([]);
+                        })
+                        .finally(() => setLoading(false));
+                } else {
+                    setCourses([]);
+                    setLoading(false);
+                }
+            })
+            .finally(() => {
+                setLoading(false); // Simplified: Always set loading to false after the request
+            });
+    };
 
     useEffect(() => {
         const fetchTeacherImages = async () => {
@@ -33,14 +143,14 @@ const CourseList = () => {
                     withCredentials: true,
                     responseType: "blob",
                 })
-                .then((response) => ({
-                    id: course.teacher.id,
-                    url: URL.createObjectURL(response.data),
-                }))
-                .catch(() => ({
-                    id: course.teacher.id,
-                    url: defaultImage,
-                }))
+                    .then((response) => ({
+                        id: course.teacher.id,
+                        url: URL.createObjectURL(response.data),
+                    }))
+                    .catch(() => ({
+                        id: course.teacher.id,
+                        url: defaultImage,
+                    }))
             );
 
             Promise.all(teacherImagePromises).then((imageResults) => {
@@ -56,44 +166,6 @@ const CourseList = () => {
             fetchTeacherImages();
         }
     }, [courses]);
-
-    const fetchCourses = (query) => {
-        setLoading(true);
-        axios.get(`/api/courses/get?query=${query}`, { withCredentials: true })
-            .then((response) => {
-                if (Array.isArray(response.data)) {
-                    setCourses(response.data);
-                    const imagePromises = response.data.map((course) =>
-                        axios.get(`/api/courses/profile/image/${course.id}`, {
-                            withCredentials: true,
-                            responseType: "blob",
-                        })
-                        .then((imageResponse) => ({
-                            id: course.id,
-                            url: URL.createObjectURL(imageResponse.data),
-                        }))
-                        .catch(() => ({
-                            id: course.id,
-                            url: defaultImage,
-                        }))
-                    );
-                    Promise.all(imagePromises).then((imageResults) => {
-                        const images = imageResults.reduce((acc, { id, url }) => {
-                            acc[id] = url;
-                            return acc;
-                        }, {});
-                        setProfileImages(images);
-                    });
-                } else {
-                    setCourses([]);
-                }
-            })
-            .catch((error) => {
-                console.error("Error fetching courses:", error);
-                setCourses([]);
-            })
-            .finally(() => setLoading(false));
-    };
 
     useEffect(() => {
         return () => {
@@ -113,9 +185,7 @@ const CourseList = () => {
         return <div className="text-center fs-4 fw-semibold mt-4">Loading...</div>;
     }
 
-    const filteredCourses = selectedFilters.length > 0
-        ? courses.filter((course) => selectedFilters.includes(course.title))
-        : courses;
+    const filteredCourses = courses;
 
     return (
         <div className="container mt-4 mb-5">
@@ -125,10 +195,9 @@ const CourseList = () => {
 
             <h2 className="text-center fw-semibold mt-5 mb-5" style={{ color: "#333", fontSize: "28px" }}> Discover Courses </h2>
 
-
             {/* Search Bar */}
             <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
-                <Box 
+                <Box
                     sx={{
                         display: "flex",
                         alignItems: "center",
@@ -147,152 +216,150 @@ const CourseList = () => {
                             {selectedFilters.length > 0 ? "Category" : ""}
                         </InputLabel>
 
-                        <Select multiple displayEmpty value={selectedFilters} onChange={(event) => { 
+                        <Select multiple displayEmpty value={selectedFilters} onChange={(event) => {
                             setSelectedFilters(typeof event.target.value === "string" ? event.target.value.split(",") : event.target.value);
                         }}
-                            renderValue={(selected) =>
-                                selected.length === 0 ? "Category" : (
-                                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                                        {selected.map((value) => (
-                                            <Chip key={value} label={value} onDelete={(event) => { 
-                                                event.stopPropagation();
-                                                setSelectedFilters((prevFilters) => prevFilters.filter((filter) => filter !== value)); 
-                                            }}
-                                                onMouseDown={(event) => event.stopPropagation()} 
-                                                sx={{ backgroundColor: "#f0f0f0", fontSize: "14px", "& .MuiChip-deleteIcon": { color: "rgba(0, 0, 0, 0.5)" } }} 
-                                            />
-                                        ))}
-                                    </Box>
-                                )
-                            }
-                            MenuProps={{ PaperProps: { style: { maxHeight: 300 } }, keepMounted: true }}
-                            sx={{ minWidth: selectedFilters.length > 2 ? 200 : 150, "& .MuiOutlinedInput-notchedOutline": { border: "none" }, "&.Mui-focused .MuiOutlinedInput-notchedOutline": { border: "none" } }}
+                                renderValue={(selected) =>
+                                    selected.length === 0 ? "Category" : (
+                                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                                            {selected.map((value) => (
+                                                <Chip key={value} label={value} onDelete={(event) => {
+                                                    event.stopPropagation();
+                                                    setSelectedFilters((prevFilters) => prevFilters.filter((filter) => filter !== value));
+                                                }}
+                                                      onMouseDown={(event) => event.stopPropagation()}
+                                                      sx={{ backgroundColor: "#f0f0f0", fontSize: "14px", "& .MuiChip-deleteIcon": { color: "rgba(0, 0, 0, 0.5)" } }}
+                                                />
+                                            ))}
+                                        </Box>
+                                    )
+                                }
+                                MenuProps={{ PaperProps: { style: { maxHeight: 300 } }, keepMounted: true }}
+                                sx={{ minWidth: selectedFilters.length > 2 ? 200 : 150, "& .MuiOutlinedInput-notchedOutline": { border: "none" }, "&.Mui-focused .MuiOutlinedInput-notchedOutline": { border: "none" } }}
                         >
-                            {courses.map((course) => <MenuItem key={course.title} value={course.title}>{course.title}</MenuItem>)}
+                            {categories.map((category) => <MenuItem key={category} value={category}>{category}</MenuItem>)}
                         </Select>
                     </FormControl>
 
                     {/* 🔹 Search line */}
-                    <TextField variant="standard" placeholder="Search for courses ..." value={searchQuery} 
-                        onChange={(event) => setSearchQuery(event.target.value)} sx={{ flex: 2, ml: 2 }} 
-                        InputProps={{ disableUnderline: true }} 
+                    <TextField variant="standard" placeholder="Search for courses ..." value={searchQuery}
+                               onChange={(event) => setSearchQuery(event.target.value)} sx={{ flex: 2, ml: 2 }}
+                               InputProps={{ disableUnderline: true }}
                     />
 
                     {/* 🔹 Search icon */}
-                    <i className="fas fa-search" style={{ fontSize: "20px", color: "rgba(0, 0, 0, 0.5)", cursor: "pointer" }} 
-                        onClick={() => fetchCourses(searchQuery)}> 
+                    <i className="fas fa-search" style={{ fontSize: "20px", color: "rgba(0, 0, 0, 0.5)", cursor: "pointer" }}
+                       onClick={() => fetchCourses(searchQuery, selectedFilters)}>
                     </i>
                 </Box>
             </Box>
-
 
             {/* Course List */}
             <div className="row g-4 justify-content-center">
                 {filteredCourses.map((course) => {
                     console.log("Course data:", course);
-                    
+
                     return (
                         <div key={course.id} className="col-lg-4 col-md-6 col-sm-12">
-                        <Link to={`/courses/${course.id}`} className="text-decoration-none">
-                            <div className="card h-100 shadow-sm rounded-4"
-                                style={{
-                                    border: "1px solid #ccc", 
-                                    borderRadius: "12px", 
-                                    overflow: "hidden", 
-                                    transition: "0.3s ease"
-                                }}
-                                onMouseOver={(e) => { 
-                                    e.currentTarget.style.backgroundColor = "#E8F5E9"; 
+                            <Link to={`/courses/${course.id}`} className="text-decoration-none">
+                                <div className="card h-100 shadow-sm rounded-4"
+                                     style={{
+                                         border: "1px solid #ccc",
+                                         borderRadius: "12px",
+                                         overflow: "hidden",
+                                         transition: "0.3s ease"
+                                     }}
+                                     onMouseOver={(e) => {
+                                         e.currentTarget.style.backgroundColor = "#E8F5E9";
 
-                                    const title = e.currentTarget.querySelector(".course-title"); 
-                                    if (title) {
-                                        title.style.color = "#4CAF50"; 
-                                    }
+                                         const title = e.currentTarget.querySelector(".course-title");
+                                         if (title) {
+                                             title.style.color = "#4CAF50";
+                                         }
 
-                                    const btn = e.currentTarget.querySelector(".view-course-btn"); 
-                                    if (btn) {
-                                        btn.style.backgroundColor = "#4CAF50"; 
-                                        btn.style.color = "#fff"; 
-                                    }
-                                }}
-                                onMouseOut={(e) => { 
-                                    e.currentTarget.style.backgroundColor = "white"; 
+                                         const btn = e.currentTarget.querySelector(".view-course-btn");
+                                         if (btn) {
+                                             btn.style.backgroundColor = "#4CAF50";
+                                             btn.style.color = "#fff";
+                                         }
+                                     }}
+                                     onMouseOut={(e) => {
+                                         e.currentTarget.style.backgroundColor = "white";
 
-                                    const title = e.currentTarget.querySelector(".course-title");
-                                    if (title) {
-                                        title.style.color = "#212529"; 
-                                    }
+                                         const title = e.currentTarget.querySelector(".course-title");
+                                         if (title) {
+                                             title.style.color = "#212529";
+                                         }
 
-                                    const btn = e.currentTarget.querySelector(".view-course-btn");
-                                    if (btn) {
-                                        btn.style.backgroundColor = "transparent"; 
-                                        btn.style.color = "#8BC34A"; 
-                                    }
-                                }}
-                            >
-                                <div style={{ position: "relative" }}>
-                                    <img src={profileImages[course.id] || defaultImage} 
-                                        alt="Course Banner"
-                                        className="card-img-top shadow-sm"  
-                                        style={{ 
-                                            width: "100%", 
-                                            height: "170px", 
-                                            objectFit: "cover",  
-                                            margin: "0",  
-                                            borderRadius: "12px 12px 0 0" 
-                                        }} 
-                                        onError={(e) => { e.target.src = defaultImage; }}
-                                    />
-                                </div>
-                                <div className="card-body text-start">
-                                    <h5 className="card-title course-title fw-bold">{course.title}</h5> 
-                                    <p className="text-muted small mb-2"
-                                        style={{
-                                            display: "-webkit-box",
-                                            WebkitLineClamp: 2,
-                                            WebkitBoxOrient: "vertical",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            width: "100%"
-                                        }}
-                                    >
-                                        {course.description}
-                                    </p>
-                                    <div className="d-flex align-items-center">
-                                        <img 
-                                            src={teacherImages[course.teacher.id] || defaultImage} 
-                                            alt="Teacher Avatar"
-                                            className="rounded-circle border"  
-                                            style={{ width: "35px", height: "35px", objectFit: "cover", marginRight: "10px" }} 
-                                            onError={(e) => { e.target.src = defaultImage; }}
+                                         const btn = e.currentTarget.querySelector(".view-course-btn");
+                                         if (btn) {
+                                             btn.style.backgroundColor = "transparent";
+                                             btn.style.color = "#8BC34A";
+                                         }
+                                     }}
+                                >
+                                    <div style={{ position: "relative" }}>
+                                        <img src={profileImages[course.id] || defaultImage}
+                                             alt="Course Banner"
+                                             className="card-img-top shadow-sm"
+                                             style={{
+                                                 width: "100%",
+                                                 height: "170px",
+                                                 objectFit: "cover",
+                                                 margin: "0",
+                                                 borderRadius: "12px 12px 0 0"
+                                             }}
+                                             onError={(e) => { e.target.src = defaultImage; }}
                                         />
-                                        <p className="card-text text-dark mb-0">
-                                            {course.teacher?.firstname ?? "Unknown"} {course.teacher?.lastname ?? ""}
-                                        </p>
                                     </div>
+                                    <div className="card-body text-start">
+                                        <h5 className="card-title course-title fw-bold">{course.title}</h5>
+                                        <p className="text-muted small mb-2"
+                                           style={{
+                                               display: "-webkit-box",
+                                               WebkitLineClamp: 2,
+                                               WebkitBoxOrient: "vertical",
+                                               overflow: "hidden",
+                                               textOverflow: "ellipsis",
+                                               width: "100%"
+                                           }}
+                                        >
+                                            {course.description}
+                                        </p>
+                                        <div className="d-flex align-items-center">
+                                            <img
+                                                src={teacherImages[course.teacher.id] || defaultImage}
+                                                alt="Teacher Avatar"
+                                                className="rounded-circle border"
+                                                style={{ width: "35px", height: "35px", objectFit: "cover", marginRight: "10px" }}
+                                                onError={(e) => { e.target.src = defaultImage; }}
+                                            />
+                                            <p className="card-text text-dark mb-0">
+                                                {course.teacher?.firstname ?? "Unknown"} {course.teacher?.lastname ?? ""}
+                                            </p>
+                                        </div>
 
-                                    {/* 🔹 Button "View Course" */}
-                                    <div className="text-center mt-3">
-                                        <Link to={`/courses/${course.id}`} className="text-decoration-none">
-                                            <button className="btn fw-bold rounded-pill px-4 py-2 view-course-btn"
-                                                style={{
-                                                    border: "2px solid #8BC34A",
-                                                    color: "#8BC34A",
-                                                    backgroundColor: "transparent",
-                                                    transition: "0.3s ease"
-                                                }}
-                                                onMouseOver={(e) => { e.target.style.backgroundColor = "#4CAF50"; e.target.style.color = "#fff"; }} 
-                                                onMouseOut={(e) => { e.target.style.backgroundColor = "transparent"; e.target.style.color = "#8BC34A"; }}
-                                            >
-                                                View Course
-                                            </button>
-                                        </Link>
+                                        {/* 🔹 Button "View Course" */}
+                                        <div className="text-center mt-3">
+                                            <Link to={`/courses/${course.id}`} className="text-decoration-none">
+                                                <button className="btn fw-bold rounded-pill px-4 py-2 view-course-btn"
+                                                        style={{
+                                                            border: "2px solid #8BC34A",
+                                                            color: "#8BC34A",
+                                                            backgroundColor: "transparent",
+                                                            transition: "0.3s ease"
+                                                        }}
+                                                        onMouseOver={(e) => { e.target.style.backgroundColor = "#4CAF50"; e.target.style.color = "#fff"; }}
+                                                        onMouseOut={(e) => { e.target.style.backgroundColor = "transparent"; e.target.style.color = "#8BC34A"; }}
+                                                >
+                                                    View Course
+                                                </button>
+                                            </Link>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </Link>
-                    </div>
-
+                            </Link>
+                        </div>
                     );
                 })}
             </div>

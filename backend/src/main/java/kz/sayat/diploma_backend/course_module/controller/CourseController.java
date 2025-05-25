@@ -3,6 +3,7 @@ package kz.sayat.diploma_backend.course_module.controller;
 import kz.sayat.diploma_backend.auth_module.dto.StudentDto;
 import kz.sayat.diploma_backend.course_module.dto.CourseDto;
 import kz.sayat.diploma_backend.course_module.dto.CourseSummaryDto;
+import kz.sayat.diploma_backend.course_module.models.enums.CourseCategory;
 import kz.sayat.diploma_backend.course_module.service.CourseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -16,7 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/courses")
@@ -75,10 +78,29 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getStudentForCourse(id));
     }
 
+
     @GetMapping("/get")
-    public ResponseEntity<List<CourseSummaryDto>> searchCourses(@RequestParam(name = "query") String search) {
-        return ResponseEntity.ok(courseService.getCourses(search));
+    public ResponseEntity<List<CourseSummaryDto>> getCourses(@RequestParam(required = false, defaultValue = "") String query) {
+        List<CourseSummaryDto> courses = courseService.getCoursesByQuery(query);
+        return ResponseEntity.ok(courses);
     }
+
+    @GetMapping("/search/categories")
+    public ResponseEntity<List<CourseSummaryDto>> getCoursesByCategories(
+            @RequestParam(required = true) List<String> categories) {
+        List<CourseSummaryDto> courses = courseService.getCoursesByCategory(categories);
+        return ResponseEntity.ok(courses);
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<String>> getCategories() {
+        List<String> categories = Arrays.stream(CourseCategory.values())
+                .map(CourseCategory::getLabel)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(categories);
+    }
+
+
 
     @PatchMapping ("/{id}/approve")
     public void approveCourse(@PathVariable(name = "id") int id) {
