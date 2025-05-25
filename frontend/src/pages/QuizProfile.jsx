@@ -78,10 +78,10 @@ const QuizProfile = () => {
 
     return (
         <div className="container mt-5">
-            <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>Back</button>
 
             <h1 className="fw-bold">{quiz.title}</h1>
             <hr />
+            <button type="button" class="btn btn-outline-secondary rounded-pill" onClick={() => navigate("/dashboard")}>Back to Modules</button>
 
             {lastAttempt && (
                 <div className="alert text-center ${lastAttempt.passed ? 'alert-success' : 'alert-danger'}">
@@ -97,16 +97,29 @@ const QuizProfile = () => {
             )}
 
             {feedback ? (
-                <div className="card mt-3">
-                    <div className="card-header">
-                        <button className="btn btn-link text-decoration-none fw-bold" onClick={() => setShowFeedback(!showFeedback)}>
-                            {showFeedback ? "Hide Feedback" : "Show Feedback"}
+                <div className="card mt-3 rounded-4 shadow-sm transition-all"
+                    style={{ overflow: "hidden", transition: "0.3s ease-in-out" }} // ✅ Плавный эффект
+                >
+                    <div className="card-header d-flex align-items-center justify-content-between">
+                        <button 
+                            className="btn btn-link text-decoration-none fw-bold d-flex align-items-center"
+                            onClick={() => setShowFeedback(!showFeedback)}
+                            style={{ fontSize: "18px", color: "#0d6efd" }} // ✅ Синий стиль Bootstrap
+                        >
+                            <i className={`bi ${showFeedback ? "bi-chevron-up" : "bi-chevron-down"} me-2`}></i> 
+                            {showFeedback ? "Hide Feedback" : "Show Feedback"} {/* ✅ Добавлена стрелка */}
                         </button>
                     </div>
+
                     {showFeedback && (
-                        <div className="card-body">
+                        <motion.div 
+                            className="card-body bg-light p-3"
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }} // ✅ Плавное появление контейнера
+                        >
                             <p dangerouslySetInnerHTML={{ __html: formatFeedback(feedback) }} />
-                        </div>
+                        </motion.div>
                     )}
                 </div>
             ) : lastAttempt && (
@@ -121,7 +134,7 @@ const QuizProfile = () => {
                         </motion.div>
                     ) : (
                         <button
-                            className="btn btn-secondary"
+                            className="btn btn-success fs-5 rounded-pill"
                             onClick={handleGenerateFeedback}
                             disabled={generatingFeedback}
                         >
@@ -131,8 +144,9 @@ const QuizProfile = () => {
                 </div>
             )}
 
+
             <div className="text-center mt-4">
-                <button className="btn btn-primary btn-lg" onClick={() => navigate(`/quiz/${quizId}`)}>
+                <button className="btn btn-primary btn-lg mb-5 rounded-pill" onClick={() => navigate(`/quiz/${quizId}`)}>
                     Restart Quiz
                 </button>
             </div>

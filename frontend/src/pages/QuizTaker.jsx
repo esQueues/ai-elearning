@@ -48,11 +48,11 @@ const QuizTaker = () => {
             <h2 className="text-center mb-4">{quiz.title}</h2>
 
             {result ? (
-                <div className="alert alert-success text-center">
+                <div className="alert alert-success text-center rounded-4">
                     <h2>🎉 Quiz Completed!</h2>
                     <p><strong>Score:</strong> {result.score} / 100</p>
-                    <button className="btn btn-primary mt-3" onClick={() => navigate(`/quiz/${quizId}/profile`)}>
-                        Back to Quiz Profile
+                    <button className="btn btn-success btn-lg px-4" onClick={() => navigate(`/quiz/${quizId}/profile`)}>
+                        Go to Quiz Profile
                     </button>
                 </div>
             ) : (

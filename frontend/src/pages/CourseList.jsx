@@ -123,7 +123,7 @@ const CourseList = () => {
                 <Box component="img" src="/dashboard.png" alt="Course List Banner" sx={{ width: "100%", height: "150px", objectFit: "cover", borderRadius: "20px" }} />
             </Box>
 
-            <h2 className="text-center fw-semibold mt-5 mb-5" style={{ color: "#333", fontSize: "28px" }}> Discover Courses </h2>
+            <h1 className="text-center fw-semibold mt-5 mb-5" style={{ color: "#333", fontSize: "28px" }}> Discover Courses </h1>
 
 
             {/* Search Bar */}
@@ -246,6 +246,7 @@ const CourseList = () => {
                                 </div>
                                 <div className="card-body text-start">
                                     <h5 className="card-title course-title fw-bold">{course.title}</h5> 
+                                    <p className="text-muted small mb-2">{course.title}</p>
                                     <p className="text-muted small mb-2"
                                         style={{
                                             display: "-webkit-box",
