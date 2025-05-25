@@ -104,10 +104,10 @@ const Navbar = () => {
         <Toolbar sx={{ padding: 0, minHeight: '64px', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <IconButton onClick={() => navigate(dashboardLink)} sx={{ p: 0 }}>
-              <img src={logo} alt="Logo" style={{ height: '40px', cursor: 'pointer' }} />
+              <img src="/logo.png" alt="Logo" style={{ height: '40px', cursor: 'pointer' }} />
             </IconButton>
             <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
-              EDUPULSE
+              OZAT
             </Typography>
           </Box>
 
