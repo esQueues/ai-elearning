@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom"; // ✅ Удалил лишний импорт `Link`
+import { useParams, Link } from "react-router-dom"; 
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -60,7 +60,7 @@ const Course = () => {
                     ...prevImages,
                     [id]: courseImg.url,
                 }));
-            }).finally(() => setLoading(false));  // ✅ Завершаем загрузку
+            }).finally(() => setLoading(false));  
         }, [id]);
 
         useEffect(() => {
@@ -92,7 +92,6 @@ const Course = () => {
 
     return (
         <div className="container mt-5 mb-3">
-            {/* 🔹 Адаптивный курс-контейнер (как в `Dashboard`) */}
             <div className="d-flex align-items-center shadow-sm"
                 style={{
                     width: "90%",
@@ -106,7 +105,6 @@ const Course = () => {
                     transition: "0.3s ease"
                 }}
             >
-                {/* 🔹 Картинка курса слева (без отступов) */}
                  <div style={{ flex: "1", display: "flex", borderRadius: "30px", overflow: "hidden", padding: "0", margin: "0" }}>  
                     <img src={courseImages[id] || defaultCourseImage}  
                         alt="Course Banner"
@@ -116,11 +114,9 @@ const Course = () => {
                     />
                 </div>
 
-
-                {/* 🔹 Информация о курсе (справа) */}
                 <div className="flex-grow-1 px-4">
                     <h2 className="fw-bold">{course.title}</h2>  
-                    <p className="text-muted small mb-2">{course.title}</p> {/* ✅ Категория курса */}
+                    <p className="text-muted small mb-2">{course.title}</p> 
                     <p className="text-secondary"
                         style={{
                             display: "-webkit-box",
@@ -134,7 +130,6 @@ const Course = () => {
                         {course.description}
                     </p>
 
-                    {/* 🔹 Преподаватель */}
                     <div className="d-flex align-items-center">
                         <img  
                             src={teacherImage || defaultTeacherImage}  
@@ -187,7 +182,7 @@ const Course = () => {
                              <div
                                 key={module.id}
                                 className="accordion-item shadow-sm rounded-4 bg-light border border-light p-3"
-                                style={{ borderRadius: "20px", marginBottom: "10px" }} // ✅ Лёгкая граница
+                                style={{ borderRadius: "20px", marginBottom: "10px" }} 
                             >
 
                                     <h2 className="accordion-header" id={`heading${index}`}>
@@ -204,8 +199,6 @@ const Course = () => {
                                             style={{ fontSize: "18px", fontWeight: "bold", borderRadius: "20px" }}
                                         >
                                     
-
-                                            {/* 🔹 Статус выполнения (процент, галочка, замок) */}
                                             <span className="d-flex align-items-center">
                                                 {isLocked ? (
                                                     <span className="fw-bold text-secondary me-3" style={{ fontSize: "22px" }}>
@@ -222,13 +215,11 @@ const Course = () => {
                                                 )}
                                             </span>
 
-                                            {/* 🔹 Разделительная линия */}
                                             <span className="border-end border-secondary" style={{ height: "22px", marginRight: "10px" }}></span>
 
-                                            {/* 🔹 Название модуля */}
                                             <span className="d-flex align-items-center">
                                                 <span
-                                                    className={`fw-bold fs-5 ${isLocked ? "text-secondary" : "text-success"}`} // ✅ Динамический цвет
+                                                    className={`fw-bold fs-5 ${isLocked ? "text-secondary" : "text-success"}`} 
                                                 >
                                                     Module {index + 1}:
                                                 </span>
@@ -243,11 +234,10 @@ const Course = () => {
                                         data-bs-parent="#courseAccordion"
                                     >
                                         <div className="accordion-body border border-light rounded-4 p-3">
-                                            {/* 🔹 Лекции */}
                                             {module.lectures.length > 0 && (
-                                                <div className="mb-3">
+                                                <div className="mb-3 rounded-4">
                                                     <h5 className="fw-bold text-dark d-flex align-items-center">
-                                                        <i className="bi bi-play-circle-fill me-2"></i> {/* ✅ Иконка вместо смайлика */}
+                                                        <i className="bi bi-play-circle-fill me-2"></i> 
                                                         Lectures
                                                     </h5>
                                                     <ul className="list-group">
@@ -256,10 +246,10 @@ const Course = () => {
                                                                 className="list-group-item rounded-4 border border-secondary"
                                                                 style={{
                                                                     transition: "0.3s ease",
-                                                                    backgroundColor: "#FFFFFF", // ✅ Белый фон по умолчанию
+                                                                    backgroundColor: "#FFFFFF", 
                                                                 }}
-                                                                onMouseEnter={(e) => e.target.style.backgroundColor = "#E6F4EA"} // ✅ Светло-зелёный при наведении
-                                                                onMouseLeave={(e) => e.target.style.backgroundColor = "#FFFFFF"} // ✅ Возвращаем обратно белый фон
+                                                                onMouseEnter={(e) => e.target.style.backgroundColor = "#E6F4EA"} 
+                                                                onMouseLeave={(e) => e.target.style.backgroundColor = "#FFFFFF"} 
                                                             >
                                                                 <Link to={`/lectures/${lecture.id}`} className="text-decoration-none text-dark">
                                                                     {lecture.title}
@@ -270,11 +260,10 @@ const Course = () => {
                                                 </div>
                                             )}
 
-                                            {/* 🔹 Квизы */}
                                             {module.quizzes.length > 0 && (
-                                                <div>
+                                                <div className ="mb-3 rounded-4">
                                                     <h5 className="fw-bold text-dark d-flex align-items-center">
-                                                        <i className="bi bi-clipboard2-check-fill me-2"></i> {/* ✅ Иконка вместо смайлика */}
+                                                        <i className="bi bi-clipboard2-check-fill me-2"></i> 
                                                         Quizzes
                                                     </h5>
                                                     <ul className="list-group">
@@ -283,10 +272,10 @@ const Course = () => {
                                                                 className="list-group-item rounded-4 border border-secondary"
                                                                 style={{
                                                                     transition: "0.3s ease",
-                                                                    backgroundColor: "#FFFFFF", // ✅ Белый фон по умолчанию
+                                                                    backgroundColor: "#FFFFFF", 
                                                                 }}
-                                                                onMouseEnter={(e) => e.target.style.backgroundColor = "#E6F4EA"} // ✅ Светло-зелёный при наведении
-                                                                onMouseLeave={(e) => e.target.style.backgroundColor = "#FFFFFF"} // ✅ Возвращаем обратно белый фон
+                                                                onMouseEnter={(e) => e.target.style.backgroundColor = "#E6F4EA"} 
+                                                                onMouseLeave={(e) => e.target.style.backgroundColor = "#FFFFFF"} 
                                                             >
                                                                 <Link to={`/quiz/${quiz.id}/profile`} className="text-decoration-none text-dark">
                                                                     {quiz.title}

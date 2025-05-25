@@ -104,7 +104,7 @@ const Dashboard = () => {
                 }}
             />
         </Box>
-        <h2 className="text-center fw-semibold mt-5 mb-5" style={{ color: "#333", fontSize: "28px" }}> Keep Learning </h2>
+        <h1 className="text-center fw-semibold mt-5 mb-5" style={{ color: "#333", fontSize: "28px" }}> Keep Learning </h1>
 
         <div className="d-flex flex-column align-items-center gap-4">
             {courses.map((course) => (
@@ -175,6 +175,7 @@ const Dashboard = () => {
 
                     <div className="flex-grow-1 px-4 py-3">
                         <h5 className="fw-bold course-title">{course.title}</h5>  
+                        <p className="text-muted small mb-2">{course.title}</p>
                         <p className="text-muted small mb-2"
                             style={{
                                 display: "-webkit-box",
