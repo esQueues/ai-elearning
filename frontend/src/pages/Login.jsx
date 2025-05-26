@@ -19,7 +19,6 @@ const Login = () => {
 
         if (response.ok) {
             const data = await response.json();
-            alert("Login successful!");
             if (data.userRole === "TEACHER") {
                 navigate("/teacher-dashboard");
             } else if (data.userRole === "ADMIN") {

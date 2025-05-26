@@ -53,53 +53,6 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository  userRepository;
     private final UserMapper userMapper;
 
-    private final Map<String, VerificationCodeData> verificationCodes = new ConcurrentHashMap<>();
-    private final JavaMailSender mailSender;
-
-    public void sendEmailVerificationCode(String email) {
-        if (!isEmailFormatValid(email)) {
-            throw new AuthException("Некорректный email");
-        }
-
-        String code = generateCode();
-        verificationCodes.put(email, new VerificationCodeData(code, LocalDateTime.now().plusMinutes(10)));
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject("Код подтверждения email");
-        message.setText("Ваш код подтверждения: " + code);
-        mailSender.send(message);
-
-        System.out.println("Код отправлен на email: " + email);
-    }
-
-    private String generateCode() {
-        return String.valueOf((int)(Math.random() * 900000) + 100000); // 6-значный код
-    }
-
-    private boolean isEmailFormatValid(String email) {
-        return email != null && email.matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$");
-    }
-
-    public boolean verifyEmailCode(String email, String inputCode) {
-        VerificationCodeData data = verificationCodes.get(email);
-        if (data == null) {
-            return false;
-        }
-
-        if (data.getExpiresAt().isBefore(LocalDateTime.now())) {
-            verificationCodes.remove(email);
-            return false;
-        }
-
-        boolean match = data.getCode().equals(inputCode);
-        if (match) {
-            verificationCodes.remove(email);
-        }
-
-        return match;
-    }
-
 
 
 

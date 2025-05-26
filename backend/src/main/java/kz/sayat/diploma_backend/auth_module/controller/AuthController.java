@@ -7,6 +7,7 @@ import kz.sayat.diploma_backend.auth_module.security.dto.LoginRequest;
 import kz.sayat.diploma_backend.auth_module.security.dto.RegisterRequest;
 import kz.sayat.diploma_backend.auth_module.dto.UserDto;
 import kz.sayat.diploma_backend.auth_module.service.AuthService;
+import kz.sayat.diploma_backend.auth_module.service.implementation.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final EmailService emailService;
 
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
@@ -32,13 +34,13 @@ public class AuthController {
 
     @PostMapping("/send-code")
     public ResponseEntity<String> sendCode(@RequestParam String email) {
-        authService.sendEmailVerificationCode(email);
+        emailService.sendEmailVerificationCode(email);
         return ResponseEntity.ok("Код отправлен на " + email);
     }
 
     @PostMapping("/verify-code")
     public boolean verifyCode(@RequestParam String email, @RequestParam String code) {
-        return authService.verifyEmailCode(email, code);
+        return emailService.verifyEmailCode(email, code);
     }
 
     @PostMapping("/register")

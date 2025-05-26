@@ -16,17 +16,22 @@ spring:
         hbm2ddl:
           auto: none
 
+
+
   mail:
-    host: smtp.gmail.com
+    host: live.smtp.mailtrap.io
     port: 587
-    username: saiat.kusainov05@gmail.com
-    password: iiri grpv amcd vuyf
+    username: api
+    password: 9bd14de2fb0bf78d90ef5c33c095e2b7
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
+
+mailtrap:
+  from: Your App <alvoduem@yandex.kz>
 
   flyway:
     enabled: true
@@ -39,7 +44,6 @@ spring:
 gemini:
   api-key: ${GEMINI_API_KEY:}
   api-url: ${GEMINI_API_URL:}
-
 
 
 

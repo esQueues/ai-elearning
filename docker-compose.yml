@@ -35,7 +35,7 @@ services:
       - "8080:8080"
     volumes:
       - profile_images:/app/uploads/teachers
-      - course_images:/app/uploads/courses  # New volume for course images
+      - course_images:/app/uploads/courses
 
   frontend:
     build:

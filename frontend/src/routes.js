@@ -1,4 +1,4 @@
-import {Outlet, Route, Routes} from "react-router-dom";
+import { Outlet, Route, Routes, useLocation } from "react-router-dom"; // Add useLocation
 import Login from "./pages/Login";
 import RegisterStudent from "./pages/RegisterStudent";
 import RegisterTeacher from "./pages/RegisterTeacher";
@@ -17,14 +17,14 @@ import CourseManage from "./pages/CourseManage";
 import AddQuiz from "./pages/AddQuiz";
 import AddModule from "./pages/AddModule";
 import AddLecture from "./pages/AddLecture";
-import EditModule  from "./pages/EditModule";
+import EditModule from "./pages/EditModule";
 import EditLecture from "./pages/EditLecture";
 import EditQuiz from "./pages/EditQuiz";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import AddCourse from "./pages/AddCourse";
 import AdminStudentsPage from "./pages/AdminStudentsPage";
-import StudentProfilePage from "./pages/StudentProfilePage";
+import StudentProfilePage from "./pages/AdminStudentsPage";
 import AdminTeachersPage from "./pages/AdminTeachersPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminFeedbacksPage from "./pages/AdminFeedbacksPage";
@@ -36,8 +36,6 @@ import Footer from "./components/Footer";
 const AppRoutes = () => {
     return (
         <Routes>
-
-            {/*<Route element={<ProtectedRoute />}>*/}
             <Route element={<NavbarWrapper />}>
                 <Route path="/" element={<Login />} />
                 <Route path="/register/student" element={<RegisterStudent />} />
@@ -53,15 +51,12 @@ const AppRoutes = () => {
                 <Route path="/quizzes/:quizId/edit" element={<EditQuiz />} />
                 <Route path="/courses/:id/add-module" element={<AddModule />} />
                 <Route path="/courses/create" element={<AddCourse />} />
-
-
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/students" element={<AdminStudentsPage />} />
                 <Route path="/admin/students/:id" element={<StudentProfilePage />} />
                 <Route path="/admin/teachers" element={<AdminTeachersPage />} />
                 <Route path="/admin/feedbacks" element={<AdminFeedbacksPage />} />
                 <Route path="/admin/courses" element={<AdminCoursePage />} />
-
                 <Route path="/home" element={<Home />} />
                 <Route path="/student/profile" element={<Profile />} />
                 <Route path="/lectures/:id" element={<Lecture />} />
@@ -72,17 +67,19 @@ const AppRoutes = () => {
                 <Route path="/courses" element={<CourseList />} />
                 <Route path="/teachers" element={<Teachers />} />
                 <Route path="/completed-courses" element={<CompletedCourses />} />
-
             </Route>
-            {/*</Route>*/}
         </Routes>
     );
 };
 
 const NavbarWrapper = () => {
+    const location = useLocation();
+    const hideNavbarRoutes = ["/", "/register/student", "/register/teacher"];
+    const showNavbar = !hideNavbarRoutes.includes(location.pathname);
+
     return (
         <div className="d-flex flex-column min-vh-100">
-            <Navbar />
+            {showNavbar && <Navbar />}
             <div className="flex-grow-1">
                 <Outlet />
             </div>
@@ -90,6 +87,5 @@ const NavbarWrapper = () => {
         </div>
     );
 };
-
 
 export default AppRoutes;

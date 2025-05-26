@@ -15,9 +15,6 @@ const RegisterStudent = () => {
     });
     const [errors, setErrors] = useState({});
     const [passwordMatchMessage, setPasswordMatchMessage] = useState("");
-    const [verificationCode, setVerificationCode] = useState("");
-    const [isEmailVerified, setIsEmailVerified] = useState(false);
-    const [verificationMessage, setVerificationMessage] = useState("");
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -56,8 +53,6 @@ const RegisterStudent = () => {
             setErrors(prev => ({ ...prev, email: "Email must contain @" }));
         } else if (name === "email") {
             setErrors(prev => ({ ...prev, email: "" }));
-            setIsEmailVerified(false); // Reset verification status on email change
-            setVerificationMessage("");
         }
 
         if (name === "password") {
@@ -66,58 +61,6 @@ const RegisterStudent = () => {
             } else {
                 setErrors(prev => ({ ...prev, password: "" }));
             }
-        }
-    };
-
-    const handleSendCode = async () => {
-        if (!formData.email) {
-            setErrors(prev => ({ ...prev, email: "Email is required to send verification code" }));
-            return;
-        }
-        if (!formData.email.includes("@")) {
-            setErrors(prev => ({ ...prev, email: "Email must contain @" }));
-            return;
-        }
-
-        try {
-            const response = await fetch("/api/auth/send-code", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({ email: formData.email })
-            });
-            if (response.ok) {
-                setVerificationMessage("Verification code sent to " + formData.email);
-            } else {
-                const errorData = await response.json();
-                setVerificationMessage(errorData.message || "Failed to send verification code.");
-            }
-        } catch (error) {
-            setVerificationMessage("Error sending verification code.");
-        }
-    };
-
-    const handleVerifyCode = async () => {
-        if (!verificationCode) {
-            setVerificationMessage("Please enter the verification code.");
-            return;
-        }
-
-        try {
-            const response = await fetch("/api/auth/verify-code", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({ email: formData.email, code: verificationCode })
-            });
-            const isVerified = await response.json();
-            if (isVerified) {
-                setIsEmailVerified(true);
-                setVerificationMessage("Email verified successfully!");
-            } else {
-                setIsEmailVerified(false);
-                setVerificationMessage("Invalid verification code.");
-            }
-        } catch (error) {
-            setVerificationMessage("Error verifying code.");
         }
     };
 
@@ -141,7 +84,6 @@ const RegisterStudent = () => {
         if (formData.password !== formData.repeatPassword) {
             validationErrors.passwordMatch = "Passwords do not match";
         }
-        if (!isEmailVerified) validationErrors.email = "Please verify your email before registering";
 
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
@@ -262,56 +204,16 @@ const RegisterStudent = () => {
 
                                 <div className="mb-3">
                                     <label htmlFor="email" className="form-label">Email *</label>
-                                    <div className="input-group">
-                                        <input
-                                            type="email"
-                                            className={`form-control ${errors.email ? "is-invalid" : ""}`}
-                                            id="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            disabled={isEmailVerified}
-                                        />
-                                        {!isEmailVerified && (
-                                            <button
-                                                type="button"
-                                                className="btn btn-outline-secondary"
-                                                onClick={handleSendCode}
-                                                disabled={!formData.email || errors.email}
-                                            >
-                                                Send Code
-                                            </button>
-                                        )}
-                                    </div>
+                                    <input
+                                        type="email"
+                                        className={`form-control ${errors.email ? "is-invalid" : ""}`}
+                                        id="email"
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                    />
                                     {errors.email && <div className="invalid-feedback">{errors.email}</div>}
                                 </div>
-
-                                {!isEmailVerified && formData.email && (
-                                    <div className="mb-3">
-                                        <label htmlFor="verificationCode" className="form-label">Verification Code *</label>
-                                        <div className="input-group">
-                                            <input
-                                                type="text"
-                                                className={`form-control ${verificationMessage.includes("Invalid") ? "is-invalid" : ""}`}
-                                                id="verificationCode"
-                                                value={verificationCode}
-                                                onChange={(e) => setVerificationCode(e.target.value)}
-                                            />
-                                            <button
-                                                type="button"
-                                                className="btn btn-outline-secondary"
-                                                onClick={handleVerifyCode}
-                                            >
-                                                Verify
-                                            </button>
-                                        </div>
-                                        {verificationMessage && (
-                                            <div className={isEmailVerified ? "text-success" : "text-danger"}>
-                                                {verificationMessage}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
 
                                 <div className="mb-3">
                                     <label htmlFor="password" className="form-label">Password *</label>
@@ -350,7 +252,6 @@ const RegisterStudent = () => {
                                 <button
                                     type="submit"
                                     className="btn btn-primary w-100 mt-3"
-                                    disabled={!isEmailVerified}
                                 >
                                     Register as a Student
                                 </button>
