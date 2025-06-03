@@ -8,21 +8,29 @@ const Lecture = () => {
     const navigate = useNavigate();
     const [lecture, setLecture] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [module, setModule] = useState(null);
 
     useEffect(() => {
         axios
             .get(`/api/courses/modules/lectures/${id}`, { withCredentials: true })
             .then((response) => {
-                console.log("Lecture data:", response.data); // ✅ Проверяем, передаётся ли quizId
                 setLecture(response.data);
+
+                // 🔽 Получаем moduleId из lecture и подгружаем module
+                return axios.get(`/api/courses/modules/${response.data.moduleId}`, { withCredentials: true });
+            })
+            .then((response) => {
+                console.log("Module data:", response.data);
+                setModule(response.data);
             })
             .catch((error) => {
-                console.error("Error fetching lecture details:", error);
+                console.error("Error fetching data:", error);
             })
             .finally(() => {
                 setLoading(false);
             });
     }, [id]);
+
 
     if (loading) return <p className="text-center mt-4 fs-4 fw-semibold">Loading...</p>;
     if (!lecture) return <p className="text-center text-danger fs-5">Lecture not found.</p>;
@@ -71,15 +79,16 @@ const Lecture = () => {
                         <i className="bi bi-arrow-left me-2"></i> Back
                     </button>
 
-                    {lecture.quizId !== undefined && lecture.quizId !== null && (
+                    {module.quizzes && module.quizzes.length > 0 && (
                         <button
                             className="btn text-white rounded-pill px-4 py-2 d-flex align-items-center"
-                            style={{ backgroundColor: "#A6D9A4" }}
-                            onClick={() => navigate(`/quiz/${lecture.quizId}`)} // ✅ Теперь кнопка ведёт на страницу квиза
+                            style={{ backgroundColor: "#8BC34A" }}
+                            onClick={() => navigate(`/quiz/${module.quizzes[0].id}`)} 
                         >
                             Quiz <i className="bi bi-arrow-right ms-2"></i>
                         </button>
                     )}
+
                 </div>
             </div>
         </div>
