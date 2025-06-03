@@ -8,6 +8,7 @@ const EditQuiz = () => {
     const [quiz, setQuiz] = useState({
         title: "",
         passingScore: "", // Initialize with empty string for UI
+        durationInMinutes: "", // New field for duration
         questions: []
     });
     const [error, setError] = useState(null);
@@ -15,10 +16,11 @@ const EditQuiz = () => {
     useEffect(() => {
         axios.get(`/api/modules/quizzes/${quizId}`, { withCredentials: true })
             .then(response => {
-                // Ensure passingScore is set as string for input compatibility
+                // Ensure passingScore and durationInMinutes are set as strings for input compatibility
                 setQuiz({
                     ...response.data,
-                    passingScore: response.data.passingScore ? String(response.data.passingScore) : ""
+                    passingScore: response.data.passingScore ? String(response.data.passingScore) : "",
+                    durationInMinutes: response.data.durationInMinutes ? String(response.data.durationInMinutes) : ""
                 });
             })
             .catch(error => {
@@ -33,6 +35,11 @@ const EditQuiz = () => {
             // Allow empty input or valid numbers (1-100)
             if (value === "" || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 100)) {
                 setQuiz({ ...quiz, passingScore: value });
+            }
+        } else if (name === "durationInMinutes") {
+            // Allow empty input or valid positive integers
+            if (value === "" || (/^\d+$/.test(value) && Number(value) >= 1)) {
+                setQuiz({ ...quiz, durationInMinutes: value });
             }
         } else {
             setQuiz({ ...quiz, [name]: value });
@@ -70,6 +77,13 @@ const EditQuiz = () => {
             return;
         }
 
+        // Validate durationInMinutes
+        const duration = Number(quiz.durationInMinutes);
+        if (!quiz.durationInMinutes || duration < 1) {
+            setError("Duration must be at least 1 minute.");
+            return;
+        }
+
         // Validate questions
         if (quiz.questions.length === 0) {
             setError("Quiz must have at least one question.");
@@ -92,10 +106,11 @@ const EditQuiz = () => {
             }
         }
 
-        // Convert passingScore to number for API
+        // Convert passingScore and durationInMinutes to numbers for API
         const updatedQuiz = {
             ...quiz,
-            passingScore: Number(quiz.passingScore)
+            passingScore: Number(quiz.passingScore),
+            durationInMinutes: Number(quiz.durationInMinutes)
         };
 
         axios.put(`/api/modules/quizzes/${quizId}`, updatedQuiz, { withCredentials: true })
@@ -134,6 +149,21 @@ const EditQuiz = () => {
                         placeholder="Enter passing score (1-100)"
                         min="1"
                         max="100"
+                        step="1"
+                        required
+                    />
+                </div>
+                <div className="mb-3">
+                    <label htmlFor="durationInMinutes" className="form-label">Duration (Minutes)</label>
+                    <input
+                        type="number"
+                        id="durationInMinutes"
+                        className="form-control"
+                        name="durationInMinutes"
+                        value={quiz.durationInMinutes}
+                        onChange={handleChange}
+                        placeholder="Enter duration in minutes"
+                        min="1"
                         step="1"
                         required
                     />

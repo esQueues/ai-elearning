@@ -6,7 +6,8 @@ const AddQuiz = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [title, setTitle] = useState("");
-    const [passingScore, setPassingScore] = useState(""); // Default to empty string for cleaner input
+    const [passingScore, setPassingScore] = useState("");
+    const [durationInMinutes, setDurationInMinutes] = useState("");
     const [questions, setQuestions] = useState([
         { questionText: "", answers: [{ answerText: "", correct: false }] },
     ]);
@@ -47,9 +48,16 @@ const AddQuiz = () => {
 
     const handlePassingScoreChange = (e) => {
         const value = e.target.value;
-        // Allow empty input for user to type freely, but only set valid numbers (1-100)
         if (value === "" || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 100)) {
             setPassingScore(value);
+        }
+    };
+
+    const handleDurationChange = (e) => {
+        const value = e.target.value;
+        // Allow empty input or positive integers
+        if (value === "" || (/^\d+$/.test(value) && Number(value) >= 1)) {
+            setDurationInMinutes(value);
         }
     };
 
@@ -66,6 +74,13 @@ const AddQuiz = () => {
         const score = Number(passingScore);
         if (!passingScore || score < 1 || score > 100) {
             setError("Passing score must be between 1 and 100.");
+            return;
+        }
+
+        // Validate durationInMinutes
+        const duration = Number(durationInMinutes);
+        if (!durationInMinutes || duration < 1) {
+            setError("Duration must be at least 1 minute.");
             return;
         }
 
@@ -94,15 +109,19 @@ const AddQuiz = () => {
 
         setLoading(true);
 
-        // Includewaterfall
-        // Include passingScore as a number in the quiz object
-        const quiz = { title, passingScore: Number(passingScore), questions };
+        // Include durationInMinutes as a number in the quiz object
+        const quiz = {
+            title,
+            passingScore: Number(passingScore),
+            durationInMinutes: Number(durationInMinutes),
+            questions,
+        };
 
         axios
             .post(`/api/modules/${id}/quizzes`, quiz, { withCredentials: true })
             .then((response) => {
-                const courseId = response.data.courseId; // Extract courseId from response
-                navigate(`/courses/${courseId}/manage`); // Redirect to course manage page
+                const courseId = response.data.courseId;
+                navigate(`/courses/${courseId}/manage`);
             })
             .catch((err) => {
                 console.error("Error creating quiz:", err);
@@ -133,6 +152,19 @@ const AddQuiz = () => {
                     className="form-control"
                     min="1"
                     max="100"
+                    step="1"
+                />
+            </div>
+            <div className="mb-3">
+                <label htmlFor="durationInMinutes" className="form-label">Duration (Minutes)</label>
+                <input
+                    type="number"
+                    id="durationInMinutes"
+                    value={durationInMinutes}
+                    onChange={handleDurationChange}
+                    placeholder="Enter duration in minutes"
+                    className="form-control"
+                    min="1"
                     step="1"
                 />
             </div>

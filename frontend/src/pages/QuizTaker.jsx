@@ -10,11 +10,17 @@ const QuizTaker = () => {
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [timeLeft, setTimeLeft] = useState(null); // Time left in seconds
+    const [timerExpired, setTimerExpired] = useState(false); // Flag to track if timer has expired
 
     useEffect(() => {
         axios.get(`/api/modules/quizzes/${quizId}`, { withCredentials: true })
             .then((response) => {
                 setQuiz(response.data);
+                // Initialize timer based on durationInMinutes (convert to seconds)
+                if (response.data.durationInMinutes) {
+                    setTimeLeft(response.data.durationInMinutes * 60);
+                }
                 setLoading(false);
             })
             .catch((err) => {
@@ -24,19 +30,52 @@ const QuizTaker = () => {
             });
     }, [quizId]);
 
+    useEffect(() => {
+        if (timeLeft === null || result || timerExpired) return;
+
+        if (timeLeft <= 0) {
+            setTimerExpired(true);
+            handleSubmit(); // Auto-submit when time is up
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setTimeLeft((prev) => prev - 1);
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [timeLeft, result, timerExpired]);
+
     const handleSelectAnswer = (questionId, answerId) => {
+        if (timerExpired || result) return;
         setAnswers({ ...answers, [questionId]: answerId });
     };
 
     const handleSubmit = () => {
+        if (result) return;
+
         const submissionData = Object.entries(answers).map(([questionId, answerId]) => ({
             questionId: Number(questionId),
             answerId: answerId,
         }));
 
         axios.post(`/api/modules/quizzes/${quizId}/submit`, submissionData, { withCredentials: true })
-            .then((response) => setResult(response.data))
-            .catch((error) => console.error("Error submitting quiz:", error));
+            .then((response) => {
+                setResult(response.data);
+                setTimerExpired(true);
+            })
+            .catch((error) => {
+                console.error("Error submitting quiz:", error);
+                setError("Failed to submit quiz. Please try again.");
+            });
+    };
+
+    // Format timeLeft into MM:SS
+    const formatTime = (seconds) => {
+        if (seconds === null) return "Loading...";
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
     };
 
     if (loading) return <p className="text-center">Loading quiz...</p>;
@@ -46,6 +85,16 @@ const QuizTaker = () => {
     return (
         <div className="container mt-4">
             <h2 className="text-center mb-4">{quiz.title}</h2>
+
+            {/* Display timer */}
+            {!result && (
+                <div className="text-center mb-4">
+                    <h4>Time Remaining: {formatTime(timeLeft)}</h4>
+                    {timerExpired && !result && (
+                        <p className="text-danger">Time's up! Submitting your answers...</p>
+                    )}
+                </div>
+            )}
 
             {result ? (
                 <div className="alert alert-success text-center rounded-4">
@@ -70,6 +119,7 @@ const QuizTaker = () => {
                                         value={answer.id}
                                         checked={answers[question.id] === answer.id}
                                         onChange={() => handleSelectAnswer(question.id, answer.id)}
+                                        disabled={timerExpired || result} // Disable inputs after time's up or submission
                                     />
                                     <label htmlFor={`q${question.id}-a${answer.id}`} className="form-check-label">
                                         {answer.answerText}
@@ -79,7 +129,12 @@ const QuizTaker = () => {
                         </div>
                     ))}
                     <div className="text-center">
-                        <button type="button" className="btn btn-success btn-lg px-4" onClick={handleSubmit}>
+                        <button
+                            type="button"
+                            className="btn btn-success btn-lg px-4"
+                            onClick={handleSubmit}
+                            disabled={timerExpired || result}
+                        >
                             Submit Quiz
                         </button>
                     </div>

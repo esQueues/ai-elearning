@@ -115,7 +115,7 @@ const Navbar = () => {
               <img src={logo} alt="Logo" style={{ height: '40px', cursor: 'pointer' }} />
             </IconButton>
             <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
-              EDUPULSE
+              OZAT
             </Typography>
           </Box>
 

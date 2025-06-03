@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom"; 
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const Course = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [course, setCourse] = useState(null);
     const [courseImages, setCourseImages] = useState({});
-    const [profileImage, setProfileImage] = useState(null);
     const [teacherImage, setTeacherImage] = useState(null);
     const [loading, setLoading] = useState(true);
     const [enrolled, setEnrolled] = useState(null);
@@ -17,35 +17,35 @@ const Course = () => {
     const defaultTeacherImage =
         "https://img.freepik.com/premium-vector/girl-holding-pencil-picture-girl-holding-book_1013341-447639.jpg?semt=ais_hybrid";
 
-        useEffect(() => {
-            axios.get(`/api/courses/${id}`, { withCredentials: true })
-                .then((response) => {
-                    setCourse(response.data);
-                    setEnrolled(response.data.enrolled);
+    useEffect(() => {
+        axios.get(`/api/courses/${id}`, { withCredentials: true })
+            .then((response) => {
+                setCourse(response.data);
+                setEnrolled(response.data.enrolled);
 
-                    if (response.data.teacher?.id) {
-                        axios.get(`/api/teachers/profile/image/${response.data.teacher.id}`, {
-                            withCredentials: true,
-                            responseType: "blob",
-                        })
+                if (response.data.teacher?.id) {
+                    axios.get(`/api/teachers/profile/image/${response.data.teacher.id}`, {
+                        withCredentials: true,
+                        responseType: "blob",
+                    })
                         .then((imageResponse) => {
                             setTeacherImage(URL.createObjectURL(imageResponse.data));
                         })
                         .catch(() => {
                             setTeacherImage(defaultTeacherImage);
                         });
-                    } else {
-                        setTeacherImage(defaultTeacherImage);
-                    }
-                })
-                .catch(() => {
+                } else {
                     setTeacherImage(defaultTeacherImage);
-                });
-
-            const courseImagePromise = axios.get(`/api/courses/profile/image/${id}`, {
-                withCredentials: true,
-                responseType: "blob",
+                }
             })
+            .catch(() => {
+                setTeacherImage(defaultTeacherImage);
+            });
+
+        const courseImagePromise = axios.get(`/api/courses/profile/image/${id}`, {
+            withCredentials: true,
+            responseType: "blob",
+        })
             .then((imageResponse) => ({
                 id,
                 url: URL.createObjectURL(imageResponse.data),
@@ -55,86 +55,121 @@ const Course = () => {
                 url: defaultCourseImage,
             }));
 
-            Promise.resolve(courseImagePromise).then((courseImg) => {
-                setCourseImages((prevImages) => ({
-                    ...prevImages,
-                    [id]: courseImg.url,
-                }));
-            }).finally(() => setLoading(false));  
-        }, [id]);
+        Promise.resolve(courseImagePromise).then((courseImg) => {
+            setCourseImages((prevImages) => ({
+                ...prevImages,
+                [id]: courseImg.url,
+            }));
+        }).finally(() => setLoading(false));
+    }, [id]);
 
-        useEffect(() => {
-            return () => {
-                Object.values(courseImages).forEach((url) => {
-                    if (url.startsWith("blob:")) {
-                        URL.revokeObjectURL(url);
-                    }
-                });
-
-                if (teacherImage && teacherImage.startsWith("blob:")) {
-                    URL.revokeObjectURL(teacherImage);
+    useEffect(() => {
+        return () => {
+            Object.values(courseImages).forEach((url) => {
+                if (url.startsWith("blob:")) {
+                    URL.revokeObjectURL(url);
                 }
-            };
-        }, [courseImages, teacherImage]);
+            });
 
-
-
-
-        if (loading) return <p className="text-center mt-4 fs-4 fw-semibold">Loading...</p>;
-        if (!course) return <p className="text-center text-danger fs-5">Course not found.</p>;
-
-        const handleEnroll = () => {
-            axios.post(`/api/courses/${id}/enroll`, {}, { withCredentials: true })
-                .then(() => setEnrolled(true))
-                .catch((error) => console.error("Error enrolling in course:", error));
+            if (teacherImage && teacherImage.startsWith("blob:")) {
+                URL.revokeObjectURL(teacherImage);
+            }
         };
+    }, [courseImages, teacherImage]);
 
+    const handleQuizClick = (quiz, event) => {
+        event.preventDefault();
+
+        // Check if there’s a last attempt (fetch attempt data)
+        axios.get(`/api/modules/quizzes/${quiz.id}/attempt`, { withCredentials: true })
+            .then((response) => {
+                if (response.data?.attemptId) {
+                    // If an attempt exists, go to quiz profile
+                    navigate(`/quiz/${quiz.id}/profile`);
+                } else if (quiz.passed) {
+                    // If no attempt but passed (edge case), go to profile
+                    navigate(`/quiz/${quiz.id}/profile`);
+                } else {
+                    // If no attempt and not passed, show alert
+                    const message = `This quiz requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
+                    if (window.confirm(message)) {
+                        navigate(`/quiz/${quiz.id}`);
+                    }
+                }
+            })
+            .catch((error) => {
+                console.error("Error checking attempt:", error);
+                const message = `This quiz requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
+                if (window.confirm(message)) {
+                    navigate(`/quiz/${quiz.id}`);
+                }
+            });
+    };
+
+    if (loading) return <p className="text-center mt-4 fs-4 fw-semibold">Loading...</p>;
+    if (!course) return <p className="text-center text-danger fs-5">Course not found.</p>;
+
+    const handleEnroll = () => {
+        axios.post(`/api/courses/${id}/enroll`, {}, { withCredentials: true })
+            .then(() => setEnrolled(true))
+            .catch((error) => console.error("Error enrolling in course:", error));
+    };
 
     return (
         <div className="container mt-5 mb-3">
+            <div className="text-start mb-3">
+                <button
+                    type="button"
+                    className="btn btn-outline-secondary rounded-pill"
+                    style={{ padding: "0.25rem 1rem", fontSize: "0.875rem" }} // Adjusted padding and font size
+                    onClick={() => navigate("/dashboard")}
+                >
+                    Back
+                </button>
+            </div>
+
             <div className="d-flex align-items-center shadow-sm"
-                style={{
-                    width: "90%",
-                    maxWidth: "1200px",
-                    border: "1px solid #ccc",
-                    borderRadius: "30px",
-                    padding: "20px",
-                    backgroundColor: "white",
-                    margin: "0 auto",
-                        padding: "0",
-                    transition: "0.3s ease"
-                }}
+                 style={{
+                     width: "90%",
+                     maxWidth: "1200px",
+                     border: "1px solid #ccc",
+                     borderRadius: "30px",
+                     padding: "20px",
+                     backgroundColor: "white",
+                     margin: "0 auto",
+                     transition: "0.3s ease"
+                 }}
             >
-                 <div style={{ flex: "1", display: "flex", borderRadius: "30px", overflow: "hidden", padding: "0", margin: "0" }}>  
-                    <img src={courseImages[id] || defaultCourseImage}  
-                        alt="Course Banner"
-                        className="shadow-sm"
-                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "30px", margin: "0", padding: "0", display: "block"}}  
-                        onError={(e) => { e.target.src = defaultCourseImage; }}
+                <div style={{ flex: "1", display: "flex", borderRadius: "30px", overflow: "hidden", padding: "0", margin: "0" }}>
+                    <img src={courseImages[id] || defaultCourseImage}
+                         alt="Course Banner"
+                         className="shadow-sm"
+                         style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "30px", margin: "0", padding: "0", display: "block"}}
+                         onError={(e) => { e.target.src = defaultCourseImage; }}
                     />
                 </div>
 
                 <div className="flex-grow-1 px-4">
-                    <h2 className="fw-bold">{course.title}</h2>  
+                    <h2 className="fw-bold">{course.title}</h2>
                     <p className="text-secondary"
-                        style={{
-                            display: "-webkit-box",
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            width: "100%"
-                        }}
+                       style={{
+                           display: "-webkit-box",
+                           WebkitLineClamp: 3,
+                           WebkitBoxOrient: "vertical",
+                           overflow: "hidden",
+                           textOverflow: "ellipsis",
+                           width: "100%"
+                       }}
                     >
                         {course.description}
                     </p>
 
                     <div className="d-flex align-items-center">
-                        <img  
-                            src={teacherImage || defaultTeacherImage}  
+                        <img
+                            src={teacherImage || defaultTeacherImage}
                             alt="Teacher Avatar"
-                            className="rounded-circle border"  
-                            style={{ width: "50px", height: "50px", objectFit: "cover", marginRight: "12px" }}  
+                            className="rounded-circle border"
+                            style={{ width: "50px", height: "50px", objectFit: "cover", marginRight: "12px" }}
                             onError={(e) => { e.target.src = defaultTeacherImage; }}
                         />
                         <p className="text-dark fw-semibold mb-0">
@@ -143,7 +178,6 @@ const Course = () => {
                     </div>
                 </div>
             </div>
-
 
             {enrolled !== null && !enrolled && (
                 <div className="text-center my-4">
@@ -157,47 +191,45 @@ const Course = () => {
             )}
 
             <div className="accordion shadow-sm rounded-4 p-3"
-                        id="courseAccordion"
-                        style={{
-                            width: "90%",
-                            maxWidth: "1200px",
-                            border: "1px solid #ccc",
-                            borderRadius: "30px",
-                            backgroundColor: "#E6F4EA",
-                            margin: "40px auto",
-                            transition: "0.3s ease"
-                        }}
-                    >
+                 id="courseAccordion"
+                 style={{
+                     width: "90%",
+                     maxWidth: "1200px",
+                     border: "1px solid #ccc",
+                     borderRadius: "30px",
+                     backgroundColor: "#E6F4EA",
+                     margin: "40px auto",
+                     transition: "0.3s ease"
+                 }}
+            >
                 {course.modules.length === 0 ? (
                     <p className="text-center text-muted">No modules available.</p>
                 ) : course.modules.map((module, index) => {
-                            const previousPassed =
-                                index === 0 ||
-                                course.modules[index - 1].quizzes.every((quiz) => quiz.passed);
-                            const allQuizzesPassed = module.quizzes.every((quiz) => quiz.passed);
-                            const isLocked = !enrolled || (!previousPassed && !allQuizzesPassed);
+                    const previousPassed =
+                        index === 0 ||
+                        course.modules[index - 1].quizzes.every((quiz) => quiz.passed);
+                    const allQuizzesPassed = module.quizzes.every((quiz) => quiz.passed);
+                    const isLocked = !enrolled || (!previousPassed && !allQuizzesPassed);
 
-                            return (
-                             <div
-                                key={module.id}
-                                className="accordion-item shadow-sm rounded-4 bg-light border border-light p-3"
-                                style={{ borderRadius: "20px", marginBottom: "10px" }} 
-                            >
-
-                                    <h2 className="accordion-header" id={`heading${index}`}>
-                                        <button
-                                            className={`accordion-button fw-bold d-flex align-items-center justify-content-between border-secondary ${
-                                                isLocked ? "disabled text-muted" : "bg-white text-dark"
-                                            }`}
-                                            type="button"
-                                            data-bs-toggle="collapse"
-                                            data-bs-target={`#collapse${index}`}
-                                            aria-expanded={!isLocked}
-                                            aria-controls={`collapse${index}`}
-                                            disabled={isLocked}
-                                            style={{ fontSize: "18px", fontWeight: "bold", borderRadius: "20px" }}
-                                        >
-                                    
+                    return (
+                        <div
+                            key={module.id}
+                            className="accordion-item shadow-sm rounded-4 bg-light border border-light p-3"
+                            style={{ borderRadius: "20px", marginBottom: "10px" }}
+                        >
+                            <h2 className="accordion-header" id={`heading${index}`}>
+                                <button
+                                    className={`accordion-button fw-bold d-flex align-items-center justify-content-between border-secondary ${
+                                        isLocked ? "disabled text-muted" : "bg-white text-dark"
+                                    }`}
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target={`#collapse${index}`}
+                                    aria-expanded={!isLocked}
+                                    aria-controls={`collapse${index}`}
+                                    disabled={isLocked}
+                                    style={{ fontSize: "18px", fontWeight: "bold", borderRadius: "20px" }}
+                                >
                                             <span className="d-flex align-items-center">
                                                 {isLocked ? (
                                                     <span className="fw-bold text-secondary me-3" style={{ fontSize: "22px" }}>
@@ -214,91 +246,89 @@ const Course = () => {
                                                 )}
                                             </span>
 
-                                            <span className="border-end border-secondary" style={{ height: "22px", marginRight: "10px" }}></span>
+                                    <span className="border-end border-secondary" style={{ height: "22px", marginRight: "10px" }}></span>
 
-                                            <span className="d-flex align-items-center">
+                                    <span className="d-flex align-items-center">
                                                 <span
-                                                    className={`fw-bold fs-5 ${isLocked ? "text-secondary" : "text-success"}`} 
+                                                    className={`fw-bold fs-5 ${isLocked ? "text-secondary" : "text-success"}`}
                                                 >
                                                     Module {index + 1}:
                                                 </span>
-                                                &nbsp; {module.title}
+                                        {module.title}
                                             </span>
-                                        </button>
-                                    </h2>
-                                    <div
-                                        id={`collapse${index}`}
-                                        className={`accordion-collapse collapse ${isLocked ? "d-none" : ""}`}
-                                        aria-labelledby={`heading${index}`}
-                                        data-bs-parent="#courseAccordion"
-                                    >
-                                        <div className="accordion-body border border-light rounded-4 p-3">
-                                            {module.lectures.length > 0 && (
-                                                <div className="mb-3 rounded-4">
-                                                    <h5 className="fw-bold text-dark d-flex align-items-center">
-                                                        <i className="bi bi-play-circle-fill me-2"></i> 
-                                                        Lectures
-                                                    </h5>
-                                                    <ul className="list-group">
-                                                        {module.lectures.map((lecture) => (
-                                                            <Link
-                                                                to={`/lectures/${lecture.id}`}
-                                                                key={lecture.id}
-                                                                className="list-group-item rounded-4 border border-secondary text-decoration-none text-dark"
-                                                                style={{
-                                                                    transition: "0.3s ease",
-                                                                    backgroundColor: "#FFFFFF",
-                                                                }}
-                                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#E6F4EA"}
-                                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#FFFFFF"}
-                                                            >
-                                                                {lecture.title}
-                                                            </Link>
+                                </button>
+                            </h2>
+                            <div
+                                id={`collapse${index}`}
+                                className={`accordion-collapse collapse ${isLocked ? "d-none" : ""}`}
+                                aria-labelledby={`heading${index}`}
+                                data-bs-parent="#courseAccordion"
+                            >
+                                <div className="accordion-body border border-light rounded-4 p-3">
+                                    {module.lectures.length > 0 && (
+                                        <div className="mb-3 rounded-4">
+                                            <h5 className="fw-bold text-dark d-flex align-items-center">
+                                                <i className="bi bi-play-circle-fill me-2"></i>
+                                                Lectures
+                                            </h5>
+                                            <ul className="list-group">
+                                                {module.lectures.map((lecture) => (
+                                                    <Link
+                                                        to={`/lectures/${lecture.id}`}
+                                                        key={lecture.id}
+                                                        className="list-group-item rounded-4 border border-secondary text-decoration-none text-dark"
+                                                        style={{
+                                                            transition: "0.3s ease",
+                                                            backgroundColor: "#FFFFFF",
+                                                        }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#E6F4EA"}
+                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#FFFFFF"}
+                                                    >
+                                                        {lecture.title}
+                                                    </Link>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
 
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-
-                                            {module.quizzes.length > 0 && (
-                                                <div className ="mb-3 rounded-4">
-                                                    <h5 className="fw-bold text-dark d-flex align-items-center">
-                                                        <i className="bi bi-clipboard2-check-fill me-2"></i> 
-                                                        Quizzes
-                                                    </h5>
-                                                    <ul className="list-group">
-                                                        {module.quizzes.map((quiz) => (
-                                                            <li key={quiz.id} className="list-group-item p-0 border-0">
-                                                            <Link
-                                                                to={`/quiz/${quiz.id}`}  // изменено с `/quizzes/${quiz.id}` на `/quiz/${quiz.id}`
-                                                                className="d-block rounded-4 border border-secondary text-decoration-none text-dark px-3 py-2"
-                                                                style={{
+                                    {module.quizzes.length > 0 && (
+                                        <div className="mb-3 rounded-4">
+                                            <h5 className="fw-bold text-dark d-flex align-items-center">
+                                                <i className="bi bi-clipboard2-check-fill me-2"></i>
+                                                Quizzes
+                                            </h5>
+                                            <ul className="list-group">
+                                                {module.quizzes.map((quiz) => (
+                                                    <li key={quiz.id} className="list-group-item p-0 border-0">
+                                                        <Link
+                                                            to="#"
+                                                            onClick={(e) => handleQuizClick(quiz, e)}
+                                                            className="d-block rounded-4 border border-secondary text-decoration-none text-dark px-3 py-2"
+                                                            style={{
                                                                 transition: "0.3s ease",
                                                                 backgroundColor: "#FFFFFF",
-                                                                }}
-                                                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E6F4EA")}
-                                                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#FFFFFF")}
-                                                            >
-                                                                {quiz.title}
-                                                            </Link>
-                                                            </li>
-                                                        ))}
-                                                        </ul>
-
-
-                                                </div>
-                                            )}
-
-                                            {module.lectures.length === 0 && module.quizzes.length === 0 && (
-                                                <p className="text-muted">No lectures or quizzes available.</p>
-                                            )}
+                                                            }}
+                                                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E6F4EA")}
+                                                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#FFFFFF")}
+                                                        >
+                                                            {quiz.title} {quiz.passed && <span className="text-success ms-2">✅</span>}
+                                                        </Link>
+                                                    </li>
+                                                ))}
+                                            </ul>
                                         </div>
-                                    </div>
+                                    )}
+
+                                    {module.lectures.length === 0 && module.quizzes.length === 0 && (
+                                        <p className="text-muted">No lectures or quizzes available.</p>
+                                    )}
                                 </div>
-                            );
-                        })}
-                    </div>     
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
+        </div>
     );
 };
 

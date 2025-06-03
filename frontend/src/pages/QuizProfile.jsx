@@ -17,11 +17,24 @@ const QuizProfile = () => {
     const [feedback, setFeedback] = useState(null);
     const [showFeedback, setShowFeedback] = useState(false);
     const [generatingFeedback, setGeneratingFeedback] = useState(false);
+    const [courseId, setCourseId] = useState(null); // New state for course ID
 
     useEffect(() => {
         axios.get(`/api/modules/quizzes/${quizId}`, { withCredentials: true })
-            .then((response) => setQuiz(response.data))
-            .catch((error) => console.error("Error fetching quiz:", error))
+            .then((response) => {
+                setQuiz(response.data);
+                // Fetch module data to get course ID
+                if (response.data.moduleId) {
+                    return axios.get(`/api/courses/modules/${response.data.moduleId}`, { withCredentials: true });
+                }
+                return null;
+            })
+            .then((moduleResponse) => {
+                if (moduleResponse && moduleResponse.data.courseId) {
+                    setCourseId(moduleResponse.data.courseId);
+                }
+            })
+            .catch((error) => console.error("Error fetching quiz or module:", error))
             .finally(() => setLoading(false));
     }, [quizId]);
 
@@ -52,6 +65,16 @@ const QuizProfile = () => {
             .finally(() => setGeneratingFeedback(false));
     };
 
+    const handleStartOrRestartQuiz = () => {
+        if (!quiz) return;
+
+        // Show alert with passing score and duration
+        const message = `This quiz requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
+        if (window.confirm(message)) {
+            navigate(`/quiz/${quizId}`);
+        }
+    };
+
     if (loading) return <p className="text-center mt-4 fs-4 fw-semibold">Loading...</p>;
     if (!quiz) return <p className="text-center text-danger fs-5">Quiz not found.</p>;
 
@@ -72,20 +95,28 @@ const QuizProfile = () => {
             .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
             .replace(/\b\*(\S.*?\S)\*\b/g, "<i>$1</i>")
             .replace(/^\*\s(?!✅|❌)(.*)/gm, "• $1")
-            .replace(/\n{2,}/g, "<br /><br />")
+            .replace(/^\n{2,}/g, "<br /><br />")
             .replace(/\n/g, "<br />");
     };
 
     return (
         <div className="container mt-5">
-
             <h1 className="fw-bold">{quiz.title}</h1>
             <hr />
-            <button type="button" class="btn btn-outline-secondary rounded-pill" onClick={() => navigate("/dashboard")}>Back to Modules</button>
+            <button
+                type="button"
+                className="btn btn-outline-secondary rounded-pill"
+                style={{ padding: "0.25rem 1rem", fontSize: "0.875rem" }} // Adjusted for size
+                onClick={() => navigate(`/courses/${courseId || 6}`)} // Fallback to 6 if courseId is null
+            >
+                Back to Course
+            </button>
 
-            {lastAttempt && (
-                <div className="alert text-center ${lastAttempt.passed ? 'alert-success' : 'alert-danger'}">
-                    <h5>Last Attempt Score</h5>
+            {/* Attempt Status Indicator */}
+            {lastAttempt ? (
+                <div className={`alert text-center ${lastAttempt.passed ? 'alert-success' : 'alert-danger'}`}>
+                    <h5>Attempt Status</h5>
+                    <p><strong>Attempt Made:</strong> Yes</p>
                     <div style={{ width: "200px", margin: "auto" }}>
                         <Doughnut data={scoreData} />
                     </div>
@@ -94,29 +125,41 @@ const QuizProfile = () => {
                         {lastAttempt.passed ? "Passed ✅" : "Not Passed ❌ Try Again"}
                     </p>
                 </div>
+            ) : (
+                <div className="alert alert-warning text-center">
+                    <h5>Attempt Status</h5>
+                    <p><strong>Attempt Made:</strong> No</p>
+                    <p className="mt-2">You have not yet attempted this quiz.</p>
+                    <button
+                        className="btn btn-primary mt-2"
+                        onClick={handleStartOrRestartQuiz} // Use the new handler
+                    >
+                        Start Quiz
+                    </button>
+                </div>
             )}
 
             {feedback ? (
                 <div className="card mt-3 rounded-4 shadow-sm transition-all"
-                    style={{ overflow: "hidden", transition: "0.3s ease-in-out" }} // ✅ Плавный эффект
+                     style={{ overflow: "hidden", transition: "0.3s ease-in-out" }}
                 >
                     <div className="card-header d-flex align-items-center justify-content-between">
-                        <button 
+                        <button
                             className="btn btn-link text-decoration-none fw-bold d-flex align-items-center"
                             onClick={() => setShowFeedback(!showFeedback)}
-                            style={{ fontSize: "18px", color: "#0d6efd" }} // ✅ Синий стиль Bootstrap
+                            style={{ fontSize: "18px", color: "#0d6efd" }}
                         >
-                            <i className={`bi ${showFeedback ? "bi-chevron-up" : "bi-chevron-down"} me-2`}></i> 
-                            {showFeedback ? "Hide Feedback" : "Show Feedback"} {/* ✅ Добавлена стрелка */}
+                            <i className={`bi ${showFeedback ? "bi-chevron-up" : "bi-chevron-down"} me-2`}></i>
+                            {showFeedback ? "Hide Feedback" : "Show Feedback"}
                         </button>
                     </div>
 
                     {showFeedback && (
-                        <motion.div 
+                        <motion.div
                             className="card-body bg-light p-3"
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }} // ✅ Плавное появление контейнера
+                            transition={{ duration: 0.3 }}
                         >
                             <p dangerouslySetInnerHTML={{ __html: formatFeedback(feedback) }} />
                         </motion.div>
@@ -144,9 +187,11 @@ const QuizProfile = () => {
                 </div>
             )}
 
-
             <div className="text-center mt-4">
-                <button className="btn btn-primary btn-lg mb-5 rounded-pill" onClick={() => navigate(`/quiz/${quizId}`)}>
+                <button
+                    className="btn btn-primary btn-lg mb-5 rounded-pill"
+                    onClick={handleStartOrRestartQuiz} // Use the new handler
+                >
                     Restart Quiz
                 </button>
             </div>

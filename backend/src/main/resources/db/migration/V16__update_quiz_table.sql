@@ -1,0 +1,1 @@
+ALTER TABLE quizzes ADD COLUMN duration_in_minutes INT NOT NULL DEFAULT 10;

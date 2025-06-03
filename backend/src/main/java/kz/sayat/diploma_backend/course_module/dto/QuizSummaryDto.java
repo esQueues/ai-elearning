@@ -7,5 +7,7 @@ public class QuizSummaryDto {
     private int id;
     private String title;
     private int moduleId;
+    private int passingScore;
+    private int durationInMinutes;
     private boolean passed;
 }
