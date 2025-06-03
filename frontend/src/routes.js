@@ -1,4 +1,4 @@
-import { Outlet, Route, Routes, useLocation, matchPath } from "react-router-dom"; // Add matchPath
+import { Outlet, Route, Routes, useLocation, matchPath } from "react-router-dom";
 import Login from "./pages/Login";
 import RegisterStudent from "./pages/RegisterStudent";
 import RegisterTeacher from "./pages/RegisterTeacher";
@@ -94,11 +94,35 @@ const NavbarWrapper = () => {
         "/courses/create",
     ];
 
+    const hideFooterRoutes = [
+        "/quiz/:quizId",
+        "/lectures/:id",
+        "/courses/:id",
+        "/admin-dashboard",
+        "/admin/students",
+        "/admin/students/:id",
+        "/admin/teachers",
+        "/admin/feedbacks",
+        "/admin/courses",
+        "/modules/:id/add-quiz",
+        "/modules/:id/add-lecture",
+        "/modules/:moduleId/edit",
+        "/lectures/:lectureId/edit",
+        "/quizzes/:quizId/edit",
+        "/courses/:id/add-module",
+        "/courses/create",
+    ];
+
     const shouldHideNavbar = hideNavbarRoutes.some((route) => {
         return matchPath({ path: route, end: true }, location.pathname);
     });
 
+    const shouldHideFooter = hideFooterRoutes.some((route) => {
+        return matchPath({ path: route, end: true }, location.pathname);
+    });
+
     const showNavbar = !shouldHideNavbar;
+    const showFooter = !shouldHideFooter;
 
     return (
         <div className="d-flex flex-column min-vh-100">
@@ -106,7 +130,7 @@ const NavbarWrapper = () => {
             <div className="flex-grow-1">
                 <Outlet />
             </div>
-            <Footer />
+            {showFooter && <Footer />}
         </div>
     );
 };
