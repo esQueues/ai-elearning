@@ -241,19 +241,20 @@ const Course = () => {
                                                     </h5>
                                                     <ul className="list-group">
                                                         {module.lectures.map((lecture) => (
-                                                            <li key={lecture.id}
-                                                                className="list-group-item rounded-4 border border-secondary"
+                                                            <Link
+                                                                to={`/lectures/${lecture.id}`}
+                                                                key={lecture.id}
+                                                                className="list-group-item rounded-4 border border-secondary text-decoration-none text-dark"
                                                                 style={{
                                                                     transition: "0.3s ease",
-                                                                    backgroundColor: "#FFFFFF", 
+                                                                    backgroundColor: "#FFFFFF",
                                                                 }}
-                                                                onMouseEnter={(e) => e.target.style.backgroundColor = "#E6F4EA"} 
-                                                                onMouseLeave={(e) => e.target.style.backgroundColor = "#FFFFFF"} 
+                                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#E6F4EA"}
+                                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#FFFFFF"}
                                                             >
-                                                                <Link to={`/lectures/${lecture.id}`} className="text-decoration-none text-dark">
-                                                                    {lecture.title}
-                                                                </Link>
-                                                            </li>
+                                                                {lecture.title}
+                                                            </Link>
+
                                                         ))}
                                                     </ul>
                                                 </div>
@@ -267,21 +268,24 @@ const Course = () => {
                                                     </h5>
                                                     <ul className="list-group">
                                                         {module.quizzes.map((quiz) => (
-                                                            <li key={quiz.id}
-                                                                className="list-group-item rounded-4 border border-secondary"
+                                                            <li key={quiz.id} className="list-group-item p-0 border-0">
+                                                            <Link
+                                                                to={`/quiz/${quiz.id}`}  // изменено с `/quizzes/${quiz.id}` на `/quiz/${quiz.id}`
+                                                                className="d-block rounded-4 border border-secondary text-decoration-none text-dark px-3 py-2"
                                                                 style={{
-                                                                    transition: "0.3s ease",
-                                                                    backgroundColor: "#FFFFFF", 
+                                                                transition: "0.3s ease",
+                                                                backgroundColor: "#FFFFFF",
                                                                 }}
-                                                                onMouseEnter={(e) => e.target.style.backgroundColor = "#E6F4EA"} 
-                                                                onMouseLeave={(e) => e.target.style.backgroundColor = "#FFFFFF"} 
+                                                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E6F4EA")}
+                                                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#FFFFFF")}
                                                             >
-                                                                <Link to={`/quiz/${quiz.id}/profile`} className="text-decoration-none text-dark">
-                                                                    {quiz.title}
-                                                                </Link>
+                                                                {quiz.title}
+                                                            </Link>
                                                             </li>
                                                         ))}
-                                                    </ul>
+                                                        </ul>
+
+
                                                 </div>
                                             )}
 
