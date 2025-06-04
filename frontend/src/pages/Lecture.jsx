@@ -16,7 +16,6 @@ const Lecture = () => {
             .then((response) => {
                 setLecture(response.data);
 
-                // 🔽 Получаем moduleId из lecture и подгружаем module
                 return axios.get(`/api/courses/modules/${response.data.moduleId}`, { withCredentials: true });
             })
             .then((response) => {
@@ -31,11 +30,32 @@ const Lecture = () => {
             });
     }, [id]);
 
+    const handleQuizClick = (quiz) => {
+        axios.get(`/api/modules/quizzes/${quiz.id}/attempt`, { withCredentials: true })
+            .then((response) => {
+                if (response.data?.attemptId) {
+                    navigate(`/quiz/${quiz.id}/profile`);
+                } else if (quiz.passed) {
+                    navigate(`/quiz/${quiz.id}/profile`);
+                } else {
+                    const message = `This quiz will consist of ${quiz.questionCount} questions also requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
+                    if (window.confirm(message)) {
+                        navigate(`/quiz/${quiz.id}`);
+                    }
+                }
+            })
+            .catch((error) => {
+                console.error("Error checking attempt:", error);
+                const message = `This quiz will consist of ${quiz.questionCount} questions also requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
+                if (window.confirm(message)) {
+                    navigate(`/quiz/${quiz.id}`);
+                }
+            });
+    };
 
     if (loading) return <p className="text-center mt-4 fs-4 fw-semibold">Loading...</p>;
     if (!lecture) return <p className="text-center text-danger fs-5">Lecture not found.</p>;
 
-    // Функция извлечения ID YouTube видео
     const getYouTubeVideoId = (url) => {
         const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
         return match ? match[1] : null;
@@ -46,21 +66,20 @@ const Lecture = () => {
 
     return (
         <div className="container d-flex flex-column align-items-center justify-content-center vh-100">
-            {/* 🔹 Главный контейнер с границей и увеличенным размером */}
             <div className="shadow-sm rounded-4 border border-light d-flex flex-column align-items-center justify-content-between"
-                style={{
-                    width: "85%",
-                    maxWidth: "1050px",
-                    height: "90%",
-                    backgroundColor: "#E6F4EA",
-                    padding: "15px 50px",
-                    marginBottom: "40px"
-                }}
+                 style={{
+                     width: "85%",
+                     maxWidth: "1050px",
+                     height: "90%",
+                     backgroundColor: "#E6F4EA",
+                     padding: "15px 50px",
+                     marginBottom: "40px"
+                 }}
             >
-                {/* 🔹 Название лекции (по центру, внутри контейнера, сверху) */}
+                {/* Lecture title (centered, inside container, at the top) */}
                 <h2 className="text-center fw-semibold">{lecture.title}</h2>
 
-                {/* 🔹 Видео (по центру контейнера) */}
+                {/* Video (centered in container) */}
                 <div className="ratio ratio-16x9 w-100">
                     <iframe
                         src={embedUrl}
@@ -70,7 +89,7 @@ const Lecture = () => {
                     ></iframe>
                 </div>
 
-                {/* 🔹 Кнопки внутри контейнера, внизу слева и справа */}
+                {/* Buttons inside container, at the bottom left and right */}
                 <div className="d-flex justify-content-between w-100 mt-3 px-3">
                     <button
                         className="btn btn-secondary rounded-pill px-4 py-2 d-flex align-items-center"
@@ -79,16 +98,16 @@ const Lecture = () => {
                         <i className="bi bi-arrow-left me-2"></i> Back
                     </button>
 
-                    {module.quizzes && module.quizzes.length > 0 && (
+                    {module?.quizzes && module.quizzes.length > 0 && (
                         <button
                             className="btn text-white rounded-pill px-4 py-2 d-flex align-items-center"
                             style={{ backgroundColor: "#8BC34A" }}
-                            onClick={() => navigate(`/quiz/${module.quizzes[0].id}`)} 
+                            onClick={() => handleQuizClick(module.quizzes[0])}
                         >
-                            Quiz <i className="bi bi-arrow-right ms-2"></i>
+                            Quiz {module.quizzes[0].passed && <span className="ms-2">✅</span>}
+                            <i className="bi bi-arrow-right ms-2"></i>
                         </button>
                     )}
-
                 </div>
             </div>
         </div>

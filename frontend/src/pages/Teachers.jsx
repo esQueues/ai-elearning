@@ -20,7 +20,6 @@ const Teachers = () => {
             .then((response) => {
                 if (Array.isArray(response.data)) {
                     setTeachers(response.data);
-                    // Fetch profile images for each teacher
                     const imagePromises = response.data.map((teacher) =>
                         axios
                             .get(`/api/teachers/profile/image/${teacher.id}`, {
@@ -55,7 +54,6 @@ const Teachers = () => {
             .finally(() => setLoading(false));
     }, []);
 
-    // Clean up blob URLs to prevent memory leaks
     useEffect(() => {
         return () => {
             Object.values(profileImages).forEach((url) => {

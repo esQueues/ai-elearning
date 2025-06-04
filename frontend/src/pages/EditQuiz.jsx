@@ -7,7 +7,9 @@ const EditQuiz = () => {
     const navigate = useNavigate();
     const [quiz, setQuiz] = useState({
         title: "",
-        passingScore: "", // Initialize with empty string for UI
+        passingScore: "",
+        durationInMinutes: "",
+        questionCount: "", // New field for questionCount
         questions: []
     });
     const [error, setError] = useState(null);
@@ -15,10 +17,11 @@ const EditQuiz = () => {
     useEffect(() => {
         axios.get(`/api/modules/quizzes/${quizId}`, { withCredentials: true })
             .then(response => {
-                // Ensure passingScore is set as string for input compatibility
                 setQuiz({
                     ...response.data,
-                    passingScore: response.data.passingScore ? String(response.data.passingScore) : ""
+                    passingScore: response.data.passingScore ? String(response.data.passingScore) : "",
+                    durationInMinutes: response.data.durationInMinutes ? String(response.data.durationInMinutes) : "",
+                    questionCount: response.data.questionCount ? String(response.data.questionCount) : "" // Initialize questionCount
                 });
             })
             .catch(error => {
@@ -30,9 +33,16 @@ const EditQuiz = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         if (name === "passingScore") {
-            // Allow empty input or valid numbers (1-100)
             if (value === "" || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 100)) {
                 setQuiz({ ...quiz, passingScore: value });
+            }
+        } else if (name === "durationInMinutes") {
+            if (value === "" || (/^\d+$/.test(value) && Number(value) >= 1)) {
+                setQuiz({ ...quiz, durationInMinutes: value });
+            }
+        } else if (name === "questionCount") {
+            if (value === "" || (/^\d+$/.test(value) && Number(value) >= 1)) {
+                setQuiz({ ...quiz, questionCount: value });
             }
         } else {
             setQuiz({ ...quiz, [name]: value });
@@ -53,6 +63,33 @@ const EditQuiz = () => {
         setQuiz({ ...quiz, questions: updatedQuestions });
     };
 
+    const handleAddQuestion = () => {
+        setQuiz({
+            ...quiz,
+            questions: [
+                ...quiz.questions,
+                { questionText: "", answers: [{ answerText: "", correct: false }] }
+            ]
+        });
+    };
+
+    const handleAddAnswer = (qIndex) => {
+        const updatedQuestions = [...quiz.questions];
+        updatedQuestions[qIndex].answers.push({ answerText: "", correct: false });
+        setQuiz({ ...quiz, questions: updatedQuestions });
+    };
+
+    const handleRemoveQuestion = (index) => {
+        const updatedQuestions = quiz.questions.filter((_, i) => i !== index);
+        setQuiz({ ...quiz, questions: updatedQuestions });
+    };
+
+    const handleRemoveAnswer = (qIndex, aIndex) => {
+        const updatedQuestions = [...quiz.questions];
+        updatedQuestions[qIndex].answers = updatedQuestions[qIndex].answers.filter((_, i) => i !== aIndex);
+        setQuiz({ ...quiz, questions: updatedQuestions });
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         setError(null);
@@ -70,6 +107,26 @@ const EditQuiz = () => {
             return;
         }
 
+        // Validate durationInMinutes
+        const duration = Number(quiz.durationInMinutes);
+        if (!quiz.durationInMinutes || duration < 1) {
+            setError("Duration must be at least 1 minute.");
+            return;
+        }
+
+        // Validate questionCount
+        const qCount = Number(quiz.questionCount);
+        if (!quiz.questionCount || qCount < 1) {
+            setError("Number of questions to select must be at least 1.");
+            return;
+        }
+
+        // Validate that questionCount does not exceed available questions
+        if (qCount > quiz.questions.length) {
+            setError("Number of questions to select cannot exceed the total number of questions.");
+            return;
+        }
+
         // Validate questions
         if (quiz.questions.length === 0) {
             setError("Quiz must have at least one question.");
@@ -84,18 +141,28 @@ const EditQuiz = () => {
                 setError(`Question ${i + 1} must have at least one answer.`);
                 return;
             }
+            let hasCorrectAnswer = false;
             for (let j = 0; j < quiz.questions[i].answers.length; j++) {
                 if (!quiz.questions[i].answers[j].answerText.trim()) {
                     setError(`Answer ${j + 1} in Question ${i + 1} cannot be empty.`);
                     return;
                 }
+                if (quiz.questions[i].answers[j].correct) {
+                    hasCorrectAnswer = true;
+                }
+            }
+            if (!hasCorrectAnswer) {
+                setError(`Question ${i + 1} must have at least one correct answer.`);
+                return;
             }
         }
 
-        // Convert passingScore to number for API
+        // Convert fields to numbers for API
         const updatedQuiz = {
             ...quiz,
-            passingScore: Number(quiz.passingScore)
+            passingScore: Number(quiz.passingScore),
+            durationInMinutes: Number(quiz.durationInMinutes),
+            questionCount: Number(quiz.questionCount)
         };
 
         axios.put(`/api/modules/quizzes/${quizId}`, updatedQuiz, { withCredentials: true })
@@ -138,9 +205,39 @@ const EditQuiz = () => {
                         required
                     />
                 </div>
+                <div className="mb-3">
+                    <label htmlFor="durationInMinutes" className="form-label">Duration (Minutes)</label>
+                    <input
+                        type="number"
+                        id="durationInMinutes"
+                        className="form-control"
+                        name="durationInMinutes"
+                        value={quiz.durationInMinutes}
+                        onChange={handleChange}
+                        placeholder="Enter duration in minutes"
+                        min="1"
+                        step="1"
+                        required
+                    />
+                </div>
+                <div className="mb-3">
+                    <label htmlFor="questionCount" className="form-label">Number of Questions to Select</label>
+                    <input
+                        type="number"
+                        id="questionCount"
+                        className="form-control"
+                        name="questionCount"
+                        value={quiz.questionCount}
+                        onChange={handleChange}
+                        placeholder="Enter number of questions for quiz attempt"
+                        min="1"
+                        step="1"
+                        required
+                    />
+                </div>
                 <h4>Questions</h4>
                 {quiz.questions.map((question, qIndex) => (
-                    <div key={question.id} className="card mb-3 p-3">
+                    <div key={question.id || qIndex} className="card mb-3 p-3">
                         <div className="mb-2">
                             <label className="form-label">Question Text</label>
                             <input
@@ -154,7 +251,7 @@ const EditQuiz = () => {
                         </div>
                         <h5>Answers</h5>
                         {question.answers.map((answer, aIndex) => (
-                            <div key={answer.id} className="input-group mb-2">
+                            <div key={answer.id || aIndex} className="input-group mb-2">
                                 <input
                                     type="text"
                                     className="form-control"
@@ -172,12 +269,42 @@ const EditQuiz = () => {
                                     />
                                     <label className="ms-2">Correct</label>
                                 </div>
+                                <button
+                                    type="button"
+                                    className="btn btn-danger ms-2"
+                                    onClick={() => handleRemoveAnswer(qIndex, aIndex)}
+                                >
+                                    Remove
+                                </button>
                             </div>
                         ))}
+                        <button
+                            type="button"
+                            className="btn btn-secondary mt-2"
+                            onClick={() => handleAddAnswer(qIndex)}
+                        >
+                            Add Answer
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-danger mt-2"
+                            onClick={() => handleRemoveQuestion(qIndex)}
+                        >
+                            Remove Question
+                        </button>
                     </div>
                 ))}
+                <button
+                    type="button"
+                    className="btn btn-primary mb-3"
+                    onClick={handleAddQuestion}
+                >
+                    Add Question
+                </button>
                 <button type="submit" className="btn btn-primary">Save Changes</button>
-                <button type="button" className="btn btn-secondary ms-2" onClick={() => navigate(-1)}>Cancel</button>
+                <button type="button" className="btn btn-secondary ms-2" onClick={() => navigate(-1)}>
+                    Cancel
+                </button>
             </form>
         </div>
     );

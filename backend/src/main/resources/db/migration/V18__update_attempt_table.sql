@@ -1,0 +1,1 @@
+ALTER TABLE attempts ADD COLUMN duration_seconds INT;

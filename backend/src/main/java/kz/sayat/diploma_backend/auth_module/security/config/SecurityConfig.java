@@ -32,39 +32,40 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(request -> {
-                CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOriginPatterns(List.of("*")); // Разрешает запросы от любых источников
-                config.setAllowedHeaders(List.of("*"));
-                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                config.setAllowCredentials(true);
-                return config;
-            }))
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(requests -> requests
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    .requestMatchers("/api/auth/send-code", "/api/auth/verify-code", "/api/auth/register/**", "/api/auth/login", "/api/auth/check-session").permitAll()
-                    .requestMatchers( "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/api/teachers","/api/courses/all").permitAll()
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-            )
-            .securityContext(securityContext ->
-                securityContext.securityContextRepository(securityContextRepository())
-            )
-            .logout(logout -> logout
-                .logoutUrl("/api/auth/logout")
-                .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
-                .invalidateHttpSession(true)
-                .deleteCookies("SESSIONID", "JSESSIONID"))
-            .exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()))
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOriginPatterns(List.of("*")); // Разрешает запросы от любых источников
+                    config.setAllowedHeaders(List.of("*"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    config.setAllowCredentials(true);
+                    return config;
+                }))
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/send-code", "/api/auth/verify-code", "/api/auth/register/**", "/api/auth/login", "/api/auth/check-session").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/teachers", "/api/courses/all").permitAll()
+                        // Add endpoints for CourseList page to allow unauthenticated access
+                        .requestMatchers("/api/courses/get", "/api/courses/search/categories", "/api/courses/categories", "/api/courses/profile/image/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                )
+                .securityContext(securityContext ->
+                        securityContext.securityContextRepository(securityContextRepository())
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
+                        .invalidateHttpSession(true)
+                        .deleteCookies("SESSIONID", "JSESSIONID"))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()))
         ;
 
         return http.build();
     }
-
 
     @Bean
     SecurityContextRepository securityContextRepository() {
@@ -74,11 +75,11 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder =
-            http.getSharedObject(AuthenticationManagerBuilder.class);
+                http.getSharedObject(AuthenticationManagerBuilder.class);
 
         authenticationManagerBuilder
-            .userDetailsService(userDetailsService)
-            .passwordEncoder(passwordEncoder());
+                .userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder());
 
         return authenticationManagerBuilder.build();
     }
@@ -87,5 +88,4 @@ public class SecurityConfig {
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }

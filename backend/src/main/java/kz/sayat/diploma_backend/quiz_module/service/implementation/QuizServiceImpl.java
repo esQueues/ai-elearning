@@ -16,11 +16,13 @@ import kz.sayat.diploma_backend.quiz_module.repository.AttemptAnswerRepository;
 import kz.sayat.diploma_backend.quiz_module.repository.QuizAttemptRepository;
 import kz.sayat.diploma_backend.quiz_module.repository.QuizRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -60,10 +62,25 @@ public class QuizServiceImpl implements QuizService {
 
     @Override
     public QuizDto findQuiz(int quizId) {
-        Quiz quiz = quizRepository.findById(quizId).
-            orElseThrow(() -> new ResourceNotFoundException("quiz not found"));
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
 
-        return quizMapper.toQuizDto(quiz);
+        List<Question> allQuestions = quiz.getQuestions();
+        int questionCount = quiz.getQuestionCount();
+
+        Collections.shuffle(allQuestions);
+
+        int availableCount = allQuestions.size();
+        int finalCount = Math.min(availableCount, questionCount);
+
+        List<Question> selectedQuestions = allQuestions.subList(0, finalCount);
+
+
+        Quiz modifiedQuiz = new Quiz();
+        BeanUtils.copyProperties(quiz, modifiedQuiz);
+        modifiedQuiz.setQuestions(selectedQuestions);
+
+        return quizMapper.toQuizDto(modifiedQuiz);
     }
 
     public List<QuizSummaryDto> findAllQuizByModuleId(int moduleId) {
@@ -72,7 +89,7 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    public QuizAttemptDto assignGrade(List<StudentAnswerDto> studentAnswers, Authentication authentication, int quizId) {
+    public QuizAttemptDto assignGrade(List<StudentAnswerDto> studentAnswers, Authentication authentication, int quizId, int durationSeconds) {
         Student student= studentService.getStudentFromUser(authentication);
 
         Quiz quiz = quizRepository.findById(quizId).
@@ -82,6 +99,7 @@ public class QuizServiceImpl implements QuizService {
         quizAttempt.setStudent(student);
         quizAttempt.setQuiz(quiz);
         quizAttempt.setAttemptNumber(getNextAttemptNumber(student, quiz));
+        quizAttempt.setDurationSeconds(durationSeconds);
 
         List<QuizAttemptAnswer> attemptAnswers = mapStudentAnswersToAttempt(studentAnswers, quiz);
 

@@ -38,4 +38,6 @@ public class QuizAttempt {
 
     private boolean passed;
 
+    private int durationSeconds;
+
 }

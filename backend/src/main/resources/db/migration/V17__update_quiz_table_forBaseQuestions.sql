@@ -1,0 +1,1 @@
+ALTER TABLE quizzes ADD COLUMN question_count INT NOT NULL DEFAULT 5;
