@@ -2,6 +2,7 @@ package kz.sayat.diploma_backend.quiz_module.controller;
 
 import kz.sayat.diploma_backend.quiz_module.dto.QuizAttemptDto;
 import kz.sayat.diploma_backend.quiz_module.dto.QuizDto;
+import kz.sayat.diploma_backend.quiz_module.dto.QuizSubmissionDto;
 import kz.sayat.diploma_backend.quiz_module.dto.StudentAnswerDto;
 import kz.sayat.diploma_backend.quiz_module.service.QuizService;
 import lombok.RequiredArgsConstructor;
@@ -36,10 +37,17 @@ public class QuizController {
 
 
     @PostMapping("/quizzes/{quizId}/submit")
-    public ResponseEntity<QuizAttemptDto> submitQuiz(@PathVariable(name = "quizId") int quizId,
-                                                  @RequestBody List<StudentAnswerDto> attemptAnswers,
-                                                  Authentication authentication) {
-        return ResponseEntity.ok(quizService.assignGrade(attemptAnswers, authentication, quizId));
+    public ResponseEntity<QuizAttemptDto> submitQuiz(
+            @PathVariable(name = "quizId") int quizId,
+            @RequestBody QuizSubmissionDto submission,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(quizService.assignGrade(
+                submission.getAttemptAnswers(),
+                authentication,
+                quizId,
+                submission.getDuration()
+        ));
     }
 
     @DeleteMapping("/quizzes/{quizId}")

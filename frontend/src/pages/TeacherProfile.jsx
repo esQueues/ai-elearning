@@ -20,7 +20,6 @@ const TeacherProfile = () => {
         "https://img.freepik.com/premium-vector/girl-holding-pencil-picture-girl-holding-book_1013341-447639.jpg?semt=ais_hybrid";
 
     useEffect(() => {
-        // Fetch teacher profile
         axios
             .get(`/api/teachers/profile`, { withCredentials: true })
             .then((response) => {

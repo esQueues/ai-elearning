@@ -68,8 +68,7 @@ const QuizProfile = () => {
     const handleStartOrRestartQuiz = () => {
         if (!quiz) return;
 
-        // Show alert with passing score and duration
-        const message = `This quiz requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
+        const message = `This quiz will consist of ${quiz.questionCount} questions also requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
         if (window.confirm(message)) {
             navigate(`/quiz/${quizId}`);
         }

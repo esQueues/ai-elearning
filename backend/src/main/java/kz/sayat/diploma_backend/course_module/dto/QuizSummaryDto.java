@@ -10,4 +10,5 @@ public class QuizSummaryDto {
     private int passingScore;
     private int durationInMinutes;
     private boolean passed;
+    private int questionCount;
 }

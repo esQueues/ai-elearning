@@ -16,7 +16,6 @@ const Lecture = () => {
             .then((response) => {
                 setLecture(response.data);
 
-                // Fetch module data using moduleId from lecture
                 return axios.get(`/api/courses/modules/${response.data.moduleId}`, { withCredentials: true });
             })
             .then((response) => {
@@ -32,18 +31,14 @@ const Lecture = () => {
     }, [id]);
 
     const handleQuizClick = (quiz) => {
-        // Check if there’s a last attempt
         axios.get(`/api/modules/quizzes/${quiz.id}/attempt`, { withCredentials: true })
             .then((response) => {
                 if (response.data?.attemptId) {
-                    // If an attempt exists, go to quiz profile
                     navigate(`/quiz/${quiz.id}/profile`);
                 } else if (quiz.passed) {
-                    // If no attempt but passed (edge case), go to profile
                     navigate(`/quiz/${quiz.id}/profile`);
                 } else {
-                    // If no attempt and not passed, show alert
-                    const message = `This quiz requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
+                    const message = `This quiz will consist of ${quiz.questionCount} questions also requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
                     if (window.confirm(message)) {
                         navigate(`/quiz/${quiz.id}`);
                     }
@@ -51,8 +46,7 @@ const Lecture = () => {
             })
             .catch((error) => {
                 console.error("Error checking attempt:", error);
-                // Fallback to alert if attempt check fails
-                const message = `This quiz requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
+                const message = `This quiz will consist of ${quiz.questionCount} questions also requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
                 if (window.confirm(message)) {
                     navigate(`/quiz/${quiz.id}`);
                 }
@@ -62,7 +56,6 @@ const Lecture = () => {
     if (loading) return <p className="text-center mt-4 fs-4 fw-semibold">Loading...</p>;
     if (!lecture) return <p className="text-center text-danger fs-5">Lecture not found.</p>;
 
-    // Function to extract YouTube video ID
     const getYouTubeVideoId = (url) => {
         const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
         return match ? match[1] : null;
@@ -73,7 +66,6 @@ const Lecture = () => {
 
     return (
         <div className="container d-flex flex-column align-items-center justify-content-center vh-100">
-            {/* Main container with border and increased size */}
             <div className="shadow-sm rounded-4 border border-light d-flex flex-column align-items-center justify-content-between"
                  style={{
                      width: "85%",

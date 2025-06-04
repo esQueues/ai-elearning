@@ -8,6 +8,7 @@ const AddQuiz = () => {
     const [title, setTitle] = useState("");
     const [passingScore, setPassingScore] = useState("");
     const [durationInMinutes, setDurationInMinutes] = useState("");
+    const [questionCount, setQuestionCount] = useState(""); // New state for questionCount
     const [questions, setQuestions] = useState([
         { questionText: "", answers: [{ answerText: "", correct: false }] },
     ]);
@@ -55,9 +56,15 @@ const AddQuiz = () => {
 
     const handleDurationChange = (e) => {
         const value = e.target.value;
-        // Allow empty input or positive integers
         if (value === "" || (/^\d+$/.test(value) && Number(value) >= 1)) {
             setDurationInMinutes(value);
+        }
+    };
+
+    const handleQuestionCountChange = (e) => {
+        const value = e.target.value;
+        if (value === "" || (/^\d+$/.test(value) && Number(value) >= 1)) {
+            setQuestionCount(value);
         }
     };
 
@@ -84,6 +91,19 @@ const AddQuiz = () => {
             return;
         }
 
+        // Validate questionCount
+        const qCount = Number(questionCount);
+        if (!questionCount || qCount < 1) {
+            setError("Number of questions to select must be at least 1.");
+            return;
+        }
+
+        // Validate that questionCount does not exceed available questions
+        if (qCount > questions.length) {
+            setError("Number of questions to select cannot exceed the total number of questions.");
+            return;
+        }
+
         // Validate questions
         if (questions.length === 0) {
             setError("Quiz must have at least one question.");
@@ -99,21 +119,29 @@ const AddQuiz = () => {
                 setError(`Question ${i + 1} must have at least one answer.`);
                 return;
             }
+            let hasCorrectAnswer = false;
             for (let j = 0; j < questions[i].answers.length; j++) {
                 if (!questions[i].answers[j].answerText.trim()) {
                     setError(`Answer ${j + 1} in Question ${i + 1} cannot be empty.`);
                     return;
                 }
+                if (questions[i].answers[j].correct) {
+                    hasCorrectAnswer = true;
+                }
+            }
+            if (!hasCorrectAnswer) {
+                setError(`Question ${i + 1} must have at least one correct answer.`);
+                return;
             }
         }
 
         setLoading(true);
 
-        // Include durationInMinutes as a number in the quiz object
         const quiz = {
             title,
             passingScore: Number(passingScore),
             durationInMinutes: Number(durationInMinutes),
+            questionCount: Number(questionCount), // Include questionCount
             questions,
         };
 
@@ -163,6 +191,19 @@ const AddQuiz = () => {
                     value={durationInMinutes}
                     onChange={handleDurationChange}
                     placeholder="Enter duration in minutes"
+                    className="form-control"
+                    min="1"
+                    step="1"
+                />
+            </div>
+            <div className="mb-3">
+                <label htmlFor="questionCount" className="form-label">Number of Questions to Select</label>
+                <input
+                    type="number"
+                    id="questionCount"
+                    value={questionCount}
+                    onChange={handleQuestionCountChange}
+                    placeholder="Enter number of questions for quiz attempt"
                     className="form-control"
                     min="1"
                     step="1"

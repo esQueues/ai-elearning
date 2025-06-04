@@ -11,6 +11,7 @@ import kz.sayat.diploma_backend.auth_module.models.User;
 import kz.sayat.diploma_backend.auth_module.repository.StudentRepository;
 import kz.sayat.diploma_backend.auth_module.security.MyUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public StudentDto getById(int id) {
         Student student = studentRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -68,6 +70,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public List<StudentDto> getAllStudents() {
         List<Student>students = studentRepository.findAll();
 

@@ -24,6 +24,8 @@ public class Quiz {
 
     private int durationInMinutes;
 
+    private int questionCount;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "module_id", nullable = false)
     private Module module;

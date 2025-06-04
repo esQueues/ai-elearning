@@ -80,18 +80,14 @@ const Course = () => {
     const handleQuizClick = (quiz, event) => {
         event.preventDefault();
 
-        // Check if there’s a last attempt (fetch attempt data)
         axios.get(`/api/modules/quizzes/${quiz.id}/attempt`, { withCredentials: true })
             .then((response) => {
                 if (response.data?.attemptId) {
-                    // If an attempt exists, go to quiz profile
                     navigate(`/quiz/${quiz.id}/profile`);
                 } else if (quiz.passed) {
-                    // If no attempt but passed (edge case), go to profile
                     navigate(`/quiz/${quiz.id}/profile`);
                 } else {
-                    // If no attempt and not passed, show alert
-                    const message = `This quiz requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
+                    const message = `This quiz will consist of ${quiz.questionCount} questions also requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
                     if (window.confirm(message)) {
                         navigate(`/quiz/${quiz.id}`);
                     }
@@ -99,7 +95,7 @@ const Course = () => {
             })
             .catch((error) => {
                 console.error("Error checking attempt:", error);
-                const message = `This quiz requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
+                const message = `This quiz will consist of ${quiz.questionCount} questions also requires a passing score of ${quiz.passingScore}%. You have ${quiz.durationInMinutes} minute(s) to complete it. Are you ready to start?`;
                 if (window.confirm(message)) {
                     navigate(`/quiz/${quiz.id}`);
                 }

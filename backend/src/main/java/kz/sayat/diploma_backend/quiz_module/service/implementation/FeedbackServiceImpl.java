@@ -47,7 +47,6 @@ public class FeedbackServiceImpl implements FeedbackService {
         int passingScore = quizAttempt.getQuiz().getPassingScore();
         boolean isPassed = quizAttempt.getScore() >= passingScore;
 
-        // Retrieve the single lecture from the module's lectures list
         List<Lecture> lectures = quizAttempt.getQuiz().getModule().getLectures();
         if (lectures == null || lectures.isEmpty()) {
             throw new ResourceNotFoundException("No lecture found for this module");
@@ -122,10 +121,17 @@ public class FeedbackServiceImpl implements FeedbackService {
         prompt.append("Student: ").append(quizAttempt.getStudent().getFirstname()).append("\n");
         prompt.append("Quiz Topic: ").append(quizAttempt.getQuiz().getTitle()).append("\n");
         prompt.append("Attempt Number: ").append(quizAttempt.getAttemptNumber()).append("\n");
-        prompt.append("Score: ").append(quizAttempt.getScore()).append("/100\n\n");
+        prompt.append("Score: ").append(quizAttempt.getScore()).append("/100\n");
+        prompt.append("Maximum Allowed Time: ").append(formatDuration(quizAttempt.getQuiz().getDurationInMinutes() * 60)).append("\n");
+        prompt.append("Time Taken: ").append(formatDuration(quizAttempt.getDurationSeconds())).append("\n\n");
 
         prompt.append("Lecture YouTube Link: ").append(youtubeLink).append("\n\n");
         prompt.append("Instructions: Analyze the YouTube lecture video to identify timecodes where topics related to the quiz questions are discussed. For incorrect answers, suggest specific timecodes where the student should revisit to understand the correct concepts.\n\n");
+
+        prompt.append("⏳ Time Analysis:\n");
+        prompt.append("Compare the time taken (").append(formatDuration(quizAttempt.getDurationSeconds())).append(") ");
+        prompt.append("with the maximum allowed time (").append(formatDuration(quizAttempt.getQuiz().getDurationInMinutes() * 60)).append("). ");
+        prompt.append("Provide feedback on the student's time management. Did they rush? Were they too slow? Could pacing affect accuracy?\n\n");
 
         prompt.append("Answers:\n");
 
@@ -172,6 +178,12 @@ public class FeedbackServiceImpl implements FeedbackService {
         prompt.append("📌 Make the explanation clear, informative, and concise. Avoid vague answers.\n");
 
         return prompt.toString();
+    }
+
+    private String formatDuration(int seconds) {
+        int minutes = seconds / 60;
+        int remainingSeconds = seconds % 60;
+        return String.format("%d:%02d", minutes, remainingSeconds);
     }
 
     private String getFeedback(String quizResult) {

@@ -171,6 +171,7 @@ public class CourseServiceImpl implements CourseService {
 
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public List<CourseSummaryDto> getAllCourses() {
         List<Course> courses=courseRepository.findAll();
         return courseMapper.toCourseSummaryDtoList(courses);

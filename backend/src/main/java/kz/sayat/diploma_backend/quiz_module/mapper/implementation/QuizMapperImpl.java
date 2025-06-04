@@ -29,6 +29,7 @@ public class QuizMapperImpl implements QuizMapper {
         quiz.setQuestions(questionMapper.toQuestionList(dto.getQuestions(),quiz));
         quiz.setPassingScore(dto.getPassingScore());
         quiz.setDurationInMinutes(dto.getDurationInMinutes());
+        quiz.setQuestionCount(dto.getQuestionCount());
         return quiz;
     }
 
@@ -44,6 +45,7 @@ public class QuizMapperImpl implements QuizMapper {
         quizDto.setModuleId(quiz.getModule().getId());
         quizDto.setPassingScore(quiz.getPassingScore());
         quizDto.setDurationInMinutes(quiz.getDurationInMinutes());
+        quizDto.setQuestionCount(quiz.getQuestionCount());
         quizDto.setQuestions(quiz.getQuestions() != null
             ? questionMapper.toDtoList(quiz.getQuestions())
             : List.of());
@@ -68,6 +70,7 @@ public class QuizMapperImpl implements QuizMapper {
         quizSummaryDto.setTitle(quiz.getTitle());
         quizSummaryDto.setDurationInMinutes(quiz.getDurationInMinutes());
         quizSummaryDto.setPassingScore(quiz.getPassingScore());
+        quizSummaryDto.setQuestionCount(quiz.getQuestionCount());
         quizSummaryDto.setModuleId(quiz.getModule().getId());
         return quizSummaryDto;
     }

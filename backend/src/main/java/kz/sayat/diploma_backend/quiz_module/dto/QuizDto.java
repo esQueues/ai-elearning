@@ -10,6 +10,7 @@ public class QuizDto {
     private String title;
     private int passingScore;
     private int durationInMinutes;
+    private int questionCount;
     private int courseId;
     private int moduleId;
     private List<QuestionDto> questions;
