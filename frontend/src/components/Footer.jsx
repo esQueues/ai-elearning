@@ -22,7 +22,7 @@ const Footer = () => {
                             <Link href="/home" sx={linkStyle}>Home</Link>
                             <Link href="/courses" sx={linkStyle}>Catalog</Link>
                             <Link href="/teachers" sx={linkStyle}>Teachers</Link>
-                            <Link href="#" sx={linkStyle}>Contact Us</Link>
+                            <Link href="/contactus" sx={linkStyle}>Contact Us</Link>
                         </Box>
                     </Grid>
                 </Grid>

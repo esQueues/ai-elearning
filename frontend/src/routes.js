@@ -4,6 +4,7 @@ import RegisterStudent from "./pages/RegisterStudent";
 import RegisterTeacher from "./pages/RegisterTeacher";
 import Home from "./pages/Home";
 import DashboardPage from "./pages/Dashboard";
+import ContactUs from "./pages/ContactUs"; 
 import Course from "./pages/Course";
 import Profile from "./pages/Profile";
 import Lecture from "./pages/Lecture";
@@ -46,6 +47,7 @@ const AppRoutes = () => {
                 <Route path="/courses/:id/manage" element={<CourseManage />} />
                 <Route path="/modules/:id/add-quiz" element={<AddQuiz />} />
                 <Route path="/modules/:id/add-lecture" element={<AddLecture />} />
+                <Route path="/contactus" element={<ContactUs />} />
                 <Route path="/modules/:moduleId/edit" element={<EditModule />} />
                 <Route path="/lectures/:lectureId/edit" element={<EditLecture />} />
                 <Route path="/quizzes/:quizId/edit" element={<EditQuiz />} />
