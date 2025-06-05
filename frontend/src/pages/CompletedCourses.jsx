@@ -59,27 +59,33 @@ const CompletedCoursesPage = () => {
                             >
                                 <div className="card-body position-relative">
                                     <h5 className="card-title fw-bold text-center">{course.title}</h5>
-                                    <p className="card-text text-muted">{course.description}</p>
-
-                                    {/* 🔹 Бейдж с процентом */}
+                                    <p
+                                        className="card-text text-muted"
+                                        style={{
+                                            display: "-webkit-box",
+                                            WebkitLineClamp: 3,
+                                            WebkitBoxOrient: "vertical",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                        }}
+                                    >
+                                        {course.description}
+                                    </p>
                                     <span className={`badge ${course.progress === 100 ? "bg-warning text-dark" : "bg-primary"} position-absolute top-0 start-50 translate-middle`}>
-                                        {course.progress === 100 ? "🏅 100% score" : `${course.progress}% Оценка`}
+                                        {course.progress === 100 ? "🏅 100% score" : `${course.progress}% score`}
                                     </span>
 
-                                    {/* 🔹 Кнопки (обновлен стиль) */}
                                     <a href={`/courses/${course.id}`} className="btn w-100 mt-3 rounded-pill"
-                                       style={{ border: "2px solid #8BC34A", color: "#8BC34A", backgroundColor: "transparent", transition: "0.3s ease" }}>
+                                        style={{ border: "2px solid #8BC34A", color: "#8BC34A", backgroundColor: "transparent", transition: "0.3s ease" }}>
                                         Go to the course
                                     </a>
-                                    {course.progress === 100 && (
-                                        <button
-                                            className="btn w-100 mt-2 rounded-pill text-white"
-                                            style={{ backgroundColor: "#8BC34A", transition: "0.3s ease" }}
-                                            onClick={() => downloadCertificate(course)}
-                                        >
-                                            Download the certificate
-                                        </button>
-                                    )}
+                                    <button
+                                        className="btn w-100 mt-2 rounded-pill text-white"
+                                        style={{ backgroundColor: "#8BC34A", transition: "0.3s ease" }}
+                                        onClick={() => downloadCertificate(course)}
+                                    >
+                                        Download the certificate
+                                    </button>
                                 </div>
                             </div>
                         </div>

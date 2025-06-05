@@ -180,7 +180,7 @@ const Dashboard = () => {
                                     WebkitBoxOrient: "vertical",
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
-                                    width: "100%"
+                                    width: "70%"
                                 }}
                             >
                                 {course.description}
