@@ -175,10 +175,6 @@ public class QuizServiceImpl implements QuizService {
     }
 
 
-
-
-
-
     private int getNextAttemptNumber(Student student, Quiz quiz) {
         List<QuizAttempt> attempts = quizAttemptRepository.findByStudentAndQuiz(student, quiz);
         return attempts.size() + 1;
@@ -189,7 +185,7 @@ public class QuizServiceImpl implements QuizService {
             .flatMap(q -> q.getAnswers().stream())
             .collect(Collectors.toMap(Answer::getId, Answer::isCorrect));
 
-        long totalQuestions = quiz.getQuestions().size();
+        long totalQuestions = quiz.getQuestionCount();
         long correctAnswers = attemptAnswers.stream()
             .filter(attemptAnswer -> correctAnswersMap.get(attemptAnswer.getAnswer().getId()))
             .count();

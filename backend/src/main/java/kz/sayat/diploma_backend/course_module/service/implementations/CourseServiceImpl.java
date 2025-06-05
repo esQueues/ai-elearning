@@ -2,6 +2,8 @@ package kz.sayat.diploma_backend.course_module.service.implementations;
 
 
 import com.itextpdf.text.*;
+import com.itextpdf.text.log.Logger;
+import com.itextpdf.text.log.LoggerFactory;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
@@ -39,6 +41,7 @@ import kz.sayat.diploma_backend.auth_module.security.MyUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -55,6 +58,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -434,7 +438,6 @@ public class CourseServiceImpl implements CourseService {
                 .body(resource);
     }
 
-    @Override
     public ByteArrayOutputStream generateCertificate(int courseId, Authentication authentication) {
         Student student = studentRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -442,132 +445,124 @@ public class CourseServiceImpl implements CourseService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
 
-        // Verify the course is completed
         if (!isCourseCompleted(student.getId(), course.getId())) {
             throw new RuntimeException("Course is not completed");
         }
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        Logger logger = LoggerFactory.getLogger(CourseServiceImpl.class);
+
         try {
-            // Create a new Document with A4 size and margins
-            Document document = new Document(PageSize.A4, 50, 50, 50, 50);
+            Document document = new Document(PageSize.A4.rotate(), 50, 50, 50, 50);
             PdfWriter writer = PdfWriter.getInstance(document, outputStream);
             document.open();
 
-            // Add a decorative border
-            PdfContentByte canvas = writer.getDirectContent();
-            canvas.setColorStroke(new BaseColor(0, 102, 204)); // Blue border
-            canvas.setLineWidth(3);
-            canvas.rectangle(30, 30, PageSize.A4.getWidth() - 60, PageSize.A4.getHeight() - 60);
-            canvas.stroke();
+            // Background
+            try {
+                Image bg = Image.getInstance(getClass().getClassLoader().getResource("static/images/certificate_background.png"));
+                bg.setAbsolutePosition(0, 0);
+                bg.scaleToFit(PageSize.A4.getHeight(), PageSize.A4.getWidth());
+                writer.getDirectContentUnder().addImage(bg);
+            } catch (Exception e) {
+                logger.warn("Background image not found.");
+            }
 
-            // Fonts for styling
-            Font titleFont = new Font(Font.FontFamily.TIMES_ROMAN, 36, Font.BOLD, new BaseColor(0, 51, 102));
-            Font subtitleFont = new Font(Font.FontFamily.TIMES_ROMAN, 24, Font.BOLD, BaseColor.BLACK);
-            Font regularFont = new Font(Font.FontFamily.TIMES_ROMAN, 18, Font.NORMAL, BaseColor.BLACK);
-            Font bodyFont = new Font(Font.FontFamily.TIMES_ROMAN, 14, Font.NORMAL, BaseColor.BLACK);
-            Font congratsFont = new Font(Font.FontFamily.TIMES_ROMAN, 16, Font.BOLDITALIC, new BaseColor(0, 102, 0));
-            Font issuedFont = new Font(Font.FontFamily.TIMES_ROMAN, 12, Font.ITALIC, BaseColor.GRAY);
+            // Logo
+            try {
+                Image logo = Image.getInstance(getClass().getClassLoader().getResource("static/images/logo.png"));
+                logo.scaleToFit(180, 180);
+                logo.setAbsolutePosition(50, PageSize.A4.getWidth() - 200);
+                document.add(logo);
+            } catch (Exception e) {
+                logger.warn("Logo image not found.");
+            }
+
+            // Fonts
+            Font titleFont = new Font(Font.FontFamily.HELVETICA, 36, Font.BOLD, new BaseColor(0, 51, 102));
+            Font subtitleFont = new Font(Font.FontFamily.HELVETICA, 24, Font.BOLD);
+            Font contentFont = new Font(Font.FontFamily.HELVETICA, 18);
+            Font smallFont = new Font(Font.FontFamily.HELVETICA, 14, Font.ITALIC, BaseColor.GRAY);
 
             // Certificate ID
-            String certificateId = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-            Paragraph certId = new Paragraph("Сертификат №: " + certificateId, issuedFont);
-            certId.setAlignment(Paragraph.ALIGN_RIGHT);
-            certId.setSpacingAfter(20);
-            document.add(certId);
-
-            // Optional: Add logo (uncomment and provide path if available)
-            /*
-            Image logo = Image.getInstance("path/to/logo.png");
-            logo.scaleToFit(100, 100);
-            logo.setAlignment(Image.ALIGN_CENTER);
-            document.add(logo);
-            */
+            String certId = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            Paragraph idPara = new Paragraph("Certificate No: " + certId, smallFont);
+            idPara.setAlignment(Element.ALIGN_RIGHT);
+            document.add(idPara);
 
             // Title
-            Paragraph title = new Paragraph("СЕРТИФИКАТ", titleFont);
-            title.setAlignment(Paragraph.ALIGN_CENTER);
-            title.setSpacingAfter(20);
+            Paragraph title = new Paragraph("Certificate of Achievement", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingBefore(40);
             document.add(title);
 
-            // Subtitle
-            Paragraph subtitle = new Paragraph("О ЗАВЕРШЕНИИ КУРСА", subtitleFont);
-            subtitle.setAlignment(Paragraph.ALIGN_CENTER);
-            subtitle.setSpacingAfter(40);
+            Paragraph subtitle = new Paragraph("Awarded for Course Completion", subtitleFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(30);
             document.add(subtitle);
 
-            // Decorative line
-            PdfPTable lineTable = new PdfPTable(1);
-            lineTable.setWidthPercentage(50);
-            PdfPCell lineCell = new PdfPCell();
-            lineCell.setBorder(Rectangle.BOTTOM);
-            lineCell.setBorderColor(new BaseColor(0, 102, 204));
-            lineCell.setBorderWidth(2);
-            lineCell.setFixedHeight(2);
-            lineTable.addCell(lineCell);
-            document.add(lineTable);
-            document.add(new Paragraph(" ", bodyFont)); // Spacer
+            // Student Info
+            Paragraph awardedTo = new Paragraph("Awarded to: " + student.getFirstname() + " " + student.getLastname(), contentFont);
+            awardedTo.setAlignment(Element.ALIGN_CENTER);
+            awardedTo.setSpacingAfter(15);
+            document.add(awardedTo);
 
-            // Course Details
-            Paragraph courseTitle = new Paragraph("Курс: " + course.getTitle(), regularFont);
-            courseTitle.setAlignment(Paragraph.ALIGN_CENTER);
-            courseTitle.setSpacingAfter(15);
-            document.add(courseTitle);
+            Paragraph courseName = new Paragraph("Course: " + course.getTitle(), contentFont);
+            courseName.setAlignment(Element.ALIGN_CENTER);
+            courseName.setSpacingAfter(10);
+            document.add(courseName);
 
-            Paragraph studentName = new Paragraph("Выдан: " + student.getFirstname() + " " + student.getLastname(), regularFont);
-            studentName.setAlignment(Paragraph.ALIGN_CENTER);
-            studentName.setSpacingAfter(15);
-            document.add(studentName);
-
-            Paragraph completionDate = new Paragraph("Дата завершения: " + LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd MMMM yyyy")), regularFont);
-            completionDate.setAlignment(Paragraph.ALIGN_CENTER);
-            completionDate.setSpacingAfter(30);
+            Paragraph completionDate = new Paragraph("Completion Date: " +
+                    LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy")), contentFont);
+            completionDate.setAlignment(Element.ALIGN_CENTER);
+            completionDate.setSpacingAfter(20);
             document.add(completionDate);
 
-            // Body
-            Paragraph body = new Paragraph("Настоящий сертификат подтверждает, что вышеуказанный участник успешно завершил курс с оценкой 100%.", bodyFont);
-            body.setAlignment(Paragraph.ALIGN_CENTER);
-            body.setSpacingAfter(20);
-            document.add(body);
+            double progress = calculateCourseProgress(student.getId(), course.getId());
+            String formattedProgress = String.format("%.0f", progress); // Rounds to nearest integer
+            Paragraph message = new Paragraph(
+                    "This certificate confirms that the above-named individual has successfully completed the course with a score of "
+                            + formattedProgress + "%.",
+                    contentFont);
+            message.setAlignment(Element.ALIGN_CENTER);
+            message.setSpacingAfter(30);
+            document.add(message);
 
-            Paragraph congrats = new Paragraph("Поздравляем с успешным завершением курса!", congratsFont);
-            congrats.setAlignment(Paragraph.ALIGN_CENTER);
-            congrats.setSpacingAfter(30);
-            document.add(congrats);
+            // Signature and "Issued by" on the same line using PdfPTable
+            PdfPTable footerTable = new PdfPTable(2);
+            footerTable.setWidthPercentage(80);
+            footerTable.setWidths(new int[]{2, 3}); // Signature : Text ratio
 
-            // Optional: Add signature placeholder (uncomment and provide path if available)
-            /*
-            Image signature = Image.getInstance("path/to/signature.png");
-            signature.scaleToFit(150, 50);
-            signature.setAlignment(Image.ALIGN_CENTER);
-            document.add(signature);
-            */
+            // Signature Cell
+            PdfPCell signatureCell = new PdfPCell();
+            signatureCell.setBorder(Rectangle.NO_BORDER);
+            signatureCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+            try {
+                Image sign = Image.getInstance(getClass().getClassLoader().getResource("static/images/signature.png"));
+                sign.scaleToFit(120, 40);
+                signatureCell.addElement(sign);
+            } catch (Exception e) {
+                logger.warn("Signature image not found.");
+            }
+            footerTable.addCell(signatureCell);
 
-            // Issued by
-            Paragraph issued = new Paragraph("Выдан в электронном виде", issuedFont);
-            issued.setAlignment(Paragraph.ALIGN_CENTER);
-            issued.setSpacingAfter(10);
-            document.add(issued);
+            // Text Cell
+            PdfPCell textCell = new PdfPCell(new Phrase("Issued electronically by Educational Platform Ozat", smallFont));
+            textCell.setBorder(Rectangle.NO_BORDER);
+            textCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            textCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+            footerTable.addCell(textCell);
 
-            // Footer with organization (adjust as needed)
-            Paragraph footer = new Paragraph("Образовательная платформа", issuedFont);
-            footer.setAlignment(Paragraph.ALIGN_CENTER);
-            document.add(footer);
+            document.add(footerTable);
 
+            // Close
             document.close();
-        } catch (DocumentException e) {
-            throw new RuntimeException("Error generating certificate", e);
         } catch (Exception e) {
-            throw new RuntimeException("Unexpected error generating certificate", e);
+            logger.error("Certificate generation failed", e);
+            throw new RuntimeException("Error generating certificate", e);
         }
 
         return outputStream;
     }
 
-    // Placeholder for isCourseCompleted method
-    private boolean isCourseCompleted(Long studentId, Integer courseId) {
-        // Implement your logic to check course completion
-        return true; // Replace with actual logic
-    }
 
 }
