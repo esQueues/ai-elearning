@@ -9,4 +9,5 @@ public class LectureDto {
     private String url;
     private int courseId;
     private int moduleId;
+    private boolean viewed;
 }

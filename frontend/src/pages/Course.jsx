@@ -102,14 +102,14 @@ const Course = () => {
             });
     };
 
-    if (loading) return <p className="text-center mt-4 fs-4 fw-semibold">Loading...</p>;
-    if (!course) return <p className="text-center text-danger fs-5">Course not found.</p>;
-
     const handleEnroll = () => {
         axios.post(`/api/courses/${id}/enroll`, {}, { withCredentials: true })
             .then(() => setEnrolled(true))
             .catch((error) => console.error("Error enrolling in course:", error));
     };
+
+    if (loading) return <p className="text-center mt-4 fs-4 fw-semibold">Loading...</p>;
+    if (!course) return <p className="text-center text-danger fs-5">Course not found.</p>;
 
     return (
         <div className="container mt-5 mb-3">
@@ -117,7 +117,7 @@ const Course = () => {
                 <button
                     type="button"
                     className="btn btn-outline-secondary rounded-pill"
-                    style={{ padding: "0.25rem 1rem", fontSize: "0.875rem" }} // Adjusted padding and font size
+                    style={{ padding: "0.25rem 1rem", fontSize: "0.875rem" }}
                     onClick={() => navigate("/dashboard")}
                 >
                     Back
@@ -226,32 +226,32 @@ const Course = () => {
                                     disabled={isLocked}
                                     style={{ fontSize: "18px", fontWeight: "bold", borderRadius: "20px" }}
                                 >
-                                            <span className="d-flex align-items-center">
-                                                {isLocked ? (
-                                                    <span className="fw-bold text-secondary me-3" style={{ fontSize: "22px" }}>
-                                                        🔒
-                                                    </span>
-                                                ) : module.progress === 100 ? (
-                                                    <span className="fw-bold text-success me-3" style={{ fontSize: "22px" }}>
-                                                        ✅
-                                                    </span>
-                                                ) : (
-                                                    <span className="fw-bold text-success me-3" style={{ fontSize: "16px" }}>
-                                                        {Math.round(module.progress)}%
-                                                    </span>
-                                                )}
+                                    <span className="d-flex align-items-center">
+                                        {isLocked ? (
+                                            <span className="fw-bold text-secondary me-3" style={{ fontSize: "22px" }}>
+                                                🔒
                                             </span>
+                                        ) : module.progress === 100 ? (
+                                            <span className="fw-bold text-success me-3" style={{ fontSize: "22px" }}>
+                                                ✅
+                                            </span>
+                                        ) : (
+                                            <span className="fw-bold text-success me-3" style={{ fontSize: "16px" }}>
+                                                {Math.round(module.progress)}%
+                                            </span>
+                                        )}
+                                    </span>
 
                                     <span className="border-end border-secondary" style={{ height: "22px", marginRight: "10px" }}></span>
 
                                     <span className="d-flex align-items-center">
-                                                <span
-                                                    className={`fw-bold fs-5 ${isLocked ? "text-secondary" : "text-success"}`}
-                                                >
-                                                    Module {index + 1}:
-                                                </span>
+                                        <span
+                                            className={`fw-bold fs-5 ${isLocked ? "text-secondary" : "text-success"}`}
+                                        >
+                                            Module {index + 1}:
+                                        </span>
                                         {module.title}
-                                            </span>
+                                    </span>
                                 </button>
                             </h2>
                             <div
@@ -272,7 +272,7 @@ const Course = () => {
                                                     <Link
                                                         to={`/lectures/${lecture.id}`}
                                                         key={lecture.id}
-                                                        className="list-group-item rounded-4 border border-secondary text-decoration-none text-dark"
+                                                        className="list-group-item rounded-4 border border-secondary text-decoration-none text-dark d-flex justify-content-between align-items-center"
                                                         style={{
                                                             transition: "0.3s ease",
                                                             backgroundColor: "#FFFFFF",
@@ -280,7 +280,8 @@ const Course = () => {
                                                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#E6F4EA"}
                                                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#FFFFFF"}
                                                     >
-                                                        {lecture.title}
+                                                        <span>{lecture.title}</span>
+                                                        {lecture.viewed && <span className="text-success">✅</span>}
                                                     </Link>
                                                 ))}
                                             </ul>
@@ -299,7 +300,7 @@ const Course = () => {
                                                         <Link
                                                             to="#"
                                                             onClick={(e) => handleQuizClick(quiz, e)}
-                                                            className="d-block rounded-4 border border-secondary text-decoration-none text-dark px-3 py-2"
+                                                            className="d-block rounded-4 border border-secondary text-decoration-none text-dark px-3 py-2 d-flex justify-content-between align-items-center"
                                                             style={{
                                                                 transition: "0.3s ease",
                                                                 backgroundColor: "#FFFFFF",
@@ -307,7 +308,8 @@ const Course = () => {
                                                             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E6F4EA")}
                                                             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#FFFFFF")}
                                                         >
-                                                            {quiz.title} {quiz.passed && <span className="text-success ms-2">✅</span>}
+                                                            <span>{quiz.title}</span>
+                                                            {quiz.passed && <span className="text-success">✅</span>}
                                                         </Link>
                                                     </li>
                                                 ))}

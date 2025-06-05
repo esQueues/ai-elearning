@@ -19,4 +19,6 @@ public interface QuizRepository extends JpaRepository<Quiz, Integer> {
 
     @Query("SELECT COUNT(q) FROM Quiz q WHERE q.module.id = :moduleId")
     int countByModuleId(@Param("moduleId") int moduleId);
+
+    List<Quiz> findByModuleId(int moduleId);
 }

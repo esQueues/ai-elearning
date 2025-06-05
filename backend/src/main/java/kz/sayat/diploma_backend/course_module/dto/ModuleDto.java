@@ -7,7 +7,6 @@ import java.util.List;
 public class ModuleDto {
     private int id;
     private String title;
-
     private int courseId;
     private double progress;
     private List<QuizSummaryDto> quizzes;

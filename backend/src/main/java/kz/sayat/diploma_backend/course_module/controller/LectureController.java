@@ -5,6 +5,7 @@ import kz.sayat.diploma_backend.course_module.service.LectureService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,14 +15,19 @@ public class LectureController {
 
     private final LectureService lectureService;
 
+    @PostMapping("/{lectureId}/viewed")
+    public void markAsViewed(@PathVariable int lectureId, Authentication auth) {
+        lectureService.markLectureAsViewed(auth, lectureId);
+    }
+
     @PostMapping("/{moduleId}/lectures")
     public ResponseEntity<LectureDto> createLecture(@RequestBody LectureDto dto, @PathVariable int moduleId) {
         return new ResponseEntity<>(lectureService.createLecture(dto, moduleId), HttpStatus.CREATED);
     }
 
     @GetMapping("/lectures/{id}")
-    public ResponseEntity<LectureDto> getLecture(@PathVariable("id") int id) {
-        return ResponseEntity.ok().body(lectureService.findLectureById(id));
+    public ResponseEntity<LectureDto> getLecture(@PathVariable("id") int id, Authentication auth) {
+        return ResponseEntity.ok().body(lectureService.findLectureById(id,auth));
     }
 
     @ResponseStatus(HttpStatus.OK)

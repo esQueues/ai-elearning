@@ -11,11 +11,11 @@ const Lecture = () => {
     const [module, setModule] = useState(null);
 
     useEffect(() => {
+        // Fetch lecture and module data
         axios
             .get(`/api/courses/modules/lectures/${id}`, { withCredentials: true })
             .then((response) => {
                 setLecture(response.data);
-
                 return axios.get(`/api/courses/modules/${response.data.moduleId}`, { withCredentials: true });
             })
             .then((response) => {
@@ -28,7 +28,24 @@ const Lecture = () => {
             .finally(() => {
                 setLoading(false);
             });
-    }, [id]);
+
+        const timer = setTimeout(() => {
+            if (!lecture?.viewed) {
+                axios
+                    .post(`/api/courses/modules/${id}/viewed`, {}, { withCredentials: true })
+                    .then(() => {
+                        console.log("Lecture marked as viewed");
+                        setLecture((prev) => ({ ...prev, viewed: true }));
+                    })
+                    .catch((error) => {
+                        console.error("Error marking lecture as viewed:", error);
+                    });
+            }
+        }, 5000); // 5 seconds
+
+        // Cleanup timer on component unmount
+        return () => clearTimeout(timer);
+    }, [id, lecture?.viewed]);
 
     const handleQuizClick = (quiz) => {
         axios.get(`/api/modules/quizzes/${quiz.id}/attempt`, { withCredentials: true })
@@ -87,6 +104,15 @@ const Lecture = () => {
                         allowFullScreen
                         className="rounded shadow-sm"
                     ></iframe>
+                </div>
+
+                {/* Viewed status indicator */}
+                <div className="mt-2">
+                    {lecture.viewed ? (
+                        <span className="text-success">✅ Viewed</span>
+                    ) : (
+                        <span className="text-muted">Not viewed</span>
+                    )}
                 </div>
 
                 {/* Buttons inside container, at the bottom left and right */}

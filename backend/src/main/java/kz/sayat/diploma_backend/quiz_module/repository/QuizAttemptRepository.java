@@ -13,4 +13,5 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Intege
 
     List<QuizAttempt> findByStudentAndQuiz(Student student, Quiz quiz);
     QuizAttempt findTopByStudentAndQuizOrderByAttemptNumberDesc(Student student, Quiz quiz);
+    QuizAttempt findTopByStudentIdAndQuizIdOrderByAttemptNumberDesc(Integer studentId, int quizId);
 }

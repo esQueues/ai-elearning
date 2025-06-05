@@ -16,4 +16,5 @@ public interface LectureRepository extends JpaRepository<Lecture, Integer> {
     @Query("DELETE FROM Lecture l WHERE l.module.id = :moduleId")
     void deleteByModuleId(@Param("moduleId") int moduleId);
 
+    List<Lecture> findByModuleId(int moduleId);
 }

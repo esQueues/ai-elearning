@@ -16,26 +16,20 @@ import kz.sayat.diploma_backend.auth_module.models.enums.UserRole;
 import kz.sayat.diploma_backend.auth_module.repository.StudentRepository;
 import kz.sayat.diploma_backend.auth_module.service.StudentService;
 import kz.sayat.diploma_backend.auth_module.service.TeacherService;
-import kz.sayat.diploma_backend.course_module.dto.CourseSummaryDto;
-import kz.sayat.diploma_backend.course_module.dto.ModuleDto;
-import kz.sayat.diploma_backend.course_module.dto.QuizSummaryDto;
-import kz.sayat.diploma_backend.course_module.models.Enrollment;
-import kz.sayat.diploma_backend.course_module.models.EnrollmentId;
+import kz.sayat.diploma_backend.course_module.dto.*;
+import kz.sayat.diploma_backend.course_module.models.*;
+import kz.sayat.diploma_backend.course_module.models.Module;
 import kz.sayat.diploma_backend.course_module.models.enums.CourseCategory;
-import kz.sayat.diploma_backend.course_module.repository.EnrollmentRepository;
-import kz.sayat.diploma_backend.course_module.repository.ModuleRepository;
+import kz.sayat.diploma_backend.course_module.repository.*;
 import kz.sayat.diploma_backend.course_module.service.CourseService;
 import kz.sayat.diploma_backend.quiz_module.models.Quiz;
 import kz.sayat.diploma_backend.quiz_module.models.QuizAttempt;
 import kz.sayat.diploma_backend.quiz_module.repository.QuizAttemptRepository;
 import kz.sayat.diploma_backend.quiz_module.repository.QuizRepository;
 import kz.sayat.diploma_backend.util.exceptions.ResourceNotFoundException;
-import kz.sayat.diploma_backend.course_module.dto.CourseDto;
-import kz.sayat.diploma_backend.course_module.models.Course;
 import kz.sayat.diploma_backend.auth_module.models.Teacher;
 import kz.sayat.diploma_backend.auth_module.models.User;
 import kz.sayat.diploma_backend.course_module.mapper.CourseMapper;
-import kz.sayat.diploma_backend.course_module.repository.CourseRepository;
 import kz.sayat.diploma_backend.auth_module.repository.TeacherRepository;
 import kz.sayat.diploma_backend.auth_module.security.MyUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +41,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-import kz.sayat.diploma_backend.course_module.models.Module;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
@@ -81,6 +74,8 @@ public class CourseServiceImpl implements CourseService {
     private final EnrollmentRepository enrollmentRepository;
     private final QuizRepository quizRepository;
     private final QuizAttemptRepository quizAttemptRepository;
+    private final LectureViewRepository lectureViewRepository;
+    private final LectureRepository lectureRepository;
 
     @Override
     @PreAuthorize("hasRole('TEACHER')")
@@ -131,6 +126,12 @@ public class CourseServiceImpl implements CourseService {
                 double progress = calculateModuleProgress(authenticatedStudentId, moduleDto.getId());
                 moduleDto.setProgress(progress);
 
+                for (LectureDto lectureDto : moduleDto.getLectures()) {
+                    boolean viewed = lectureViewRepository.existsByStudentIdAndLectureId(
+                            authenticatedStudentId, lectureDto.getId());
+                    lectureDto.setViewed(viewed);
+                }
+
                 for (QuizSummaryDto quizSummary : moduleDto.getQuizzes()) {
                     Quiz quiz = quizRepository.findById(quizSummary.getId())
                         .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
@@ -142,7 +143,8 @@ public class CourseServiceImpl implements CourseService {
         } else {
             courseDto.getModules().forEach(module -> {
                 module.setProgress(0);
-                module.getQuizzes().forEach(quiz -> quiz.setPassed(false)); // Явно устанавливаем passed: false
+                module.getQuizzes().forEach(quiz -> quiz.setPassed(false));
+                module.getLectures().forEach(lecture -> lecture.setViewed(false));
             });
         }
 
@@ -262,36 +264,36 @@ public class CourseServiceImpl implements CourseService {
 
         double progress = totalModules == 0 ? 0 : totalProgress / totalModules;
 
-        // Check if the student has completed the course
         updateEnrollmentStatus(studentId, courseId);
 
         return progress;
     }
 
 
-    public double calculateModuleProgress(int studentId, int moduleId) {
-        int totalQuizzes = quizRepository.countByModuleId(moduleId);
+    private double calculateModuleProgress(Integer studentId, int moduleId) {
+        List<Lecture> lectures = lectureRepository.findByModuleId(moduleId);
+        List<Quiz> quizzes = quizRepository.findByModuleId(moduleId);
 
-        if (totalQuizzes == 0) {
-            return 100.0;
+        int totalItems = lectures.size() + quizzes.size();
+        if (totalItems == 0) {
+            return 0.0;
         }
 
-        List<Quiz> quizzes = quizRepository.findQuizzesByModule_Id(moduleId);
-
-        double totalScore = 0;
-
-        Student student = studentRepository.findById(studentId)
-            .orElseThrow(() -> new RuntimeException("Student not found"));
-
+        int completedItems = 0;
+        for (Lecture lecture : lectures) {
+            if (lectureViewRepository.existsByStudentIdAndLectureId(studentId, lecture.getId())) {
+                completedItems++;
+            }
+        }
         for (Quiz quiz : quizzes) {
-            QuizAttempt lastAttempt = quizAttemptRepository.findTopByStudentAndQuizOrderByAttemptNumberDesc(student, quiz);
-
-            if (lastAttempt != null && lastAttempt.isPassed()) {
-                totalScore += lastAttempt.getScore();
+            QuizAttempt latestAttempt = quizAttemptRepository
+                    .findTopByStudentIdAndQuizIdOrderByAttemptNumberDesc(studentId, quiz.getId());
+            if (latestAttempt != null && latestAttempt.isPassed()) {
+                completedItems++;
             }
         }
 
-        return totalScore / totalQuizzes;
+        return ((double) completedItems / totalItems) * 100.0;
     }
 
 
