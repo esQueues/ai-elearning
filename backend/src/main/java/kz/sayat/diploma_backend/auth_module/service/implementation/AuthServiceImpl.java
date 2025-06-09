@@ -54,8 +54,6 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
 
 
-
-
     @Override
     public UserDto login(HttpServletRequest request, HttpServletResponse response, LoginRequest authRequest) {
         UsernamePasswordAuthenticationToken token = UsernamePasswordAuthenticationToken.unauthenticated(
